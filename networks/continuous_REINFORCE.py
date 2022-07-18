@@ -102,7 +102,7 @@ if __name__ == '__main__':
                 if (i_episode + 1) % 10 == 0:
                     pbar.set_postfix({
                         'episode':
-                            '%d' % i * check_time + ,
+                            '%d' % i * check_time + i_episode,
                         'return':
                             '%.3f' % avg_return
                     })
