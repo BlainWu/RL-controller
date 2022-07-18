@@ -31,7 +31,7 @@ class Continuous_DQN:
         self.device = device
 
     def take_action(self, state):
-        # return the value of action
+        # return the value of action; e-greedy method
         if np.random.random() < self.epsilon:
             action_id = np.random.randint(self.action_dim)
         else:
@@ -68,7 +68,7 @@ class Continuous_DQN:
 
 
 if __name__ == "__main__":
-    resolution = 21
+    resolution = 21 # from -1 to 1, at 0.1 step size
     lr = 2e-3
     iterations = 50
     num_episodes = 1000

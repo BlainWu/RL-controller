@@ -10,7 +10,7 @@ import time
 model_path = './models/con_DQN_res21_model_e5_r429.pth'
 num_steps = 500
 resolution = 21  # IMPORTANT!!! Should be same as the value in the model
-actions = np.linspace(-1,1,resolution)
+actions = np.linspace(-1, 1, resolution)
 
 """ Init """
 env = ContinuousCartPoleEnv()
