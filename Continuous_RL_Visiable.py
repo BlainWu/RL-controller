@@ -25,7 +25,7 @@ DRL_model.to(device)
 """ Inference """
 done = False
 step_ct = 0
-while(step_ct < num_steps and not done):
+while(step_ct < num_steps):
     obs = torch.tensor([obs], dtype=torch.float).to(device)
     action_idx = DRL_model(obs).argmax().item()
     action = actions[action_idx]
