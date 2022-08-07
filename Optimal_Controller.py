@@ -3,6 +3,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import time
 from utils.continuous_CartPole import ContinuousCartPoleEnv
+from utils.plot_utils import plot_action, plot_states
 from scipy import linalg
 
 
@@ -39,45 +40,28 @@ def optimal_controller(K, state):
     return u
 
 
-def plot_action(data, steps, grid = False, max_value = 0.5):
-    x_axis = [i for i in range(steps)]
-    import matplotlib.pyplot as plt
-    import numpy as np
-    # calculate metric
-    var = round(np.var(data), 4)
-    mean = round(np.mean(data), 4)
-    plt.figure()
-    ax = plt.gca()
-    plt.title('Control Signal')
-    plt.plot(x_axis, data)
-    plt.axis([0, steps, -max_value, max_value])
-    plt.text(0.1, 0.8, r'$\mu={},\ \sigma={}$'.format(mean, var), transform=ax.transAxes)
-    plt.grid(grid)
-    plt.show()
-
-
-def plot_states(data, steps):
-    x_axix = [i for i in range(steps)]
-    import matplotlib.pyplot as plt
-    import numpy as np
-    plt.figure()
-    plt.subplots(411)
-
-
 if __name__ == "__main__":
-    env = ContinuousCartPoleEnv()
+    # init env
+    env = ContinuousCartPoleEnv(disturb_type='Gauss Noise', sensor_index=[0, 1, 2, 3],
+                                disturb_starts=100, gaussian_std=0.5)
     obs = env.reset()
     num_steps = 300
-    K = generate_K_from_ARE()
+    # init controller
+    K = generate_K_from_ARE(len_pole=5)
+    # record data
     action_record = []
+    obs_record = []
     for step in range(num_steps):
         action = optimal_controller(K, obs)
-        action_record.append(action)
         obs, reward, done, info = env.step(action)
-        env.render(mode = 'human')
+        # record data
+        obs_record.append(obs)
+        action_record.append(action)
+        # UI
+        env.render(mode='human')
         time.sleep(0.001)
-
     env.close()
+    # plot data
+    plot_action(action_record, num_steps, max_value=1.2)
+    plot_states(obs_record, num_steps)
 
-    # plot datas
-    plot_action(action_record, num_steps)

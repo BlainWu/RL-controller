@@ -4,14 +4,18 @@ Copied from http://incompleteideas.net/sutton/book/code/pole.c
 permalink: https://perma.cc/C9ZM-652R
 
 Continuous version by Ian Danforth
+Modified by Peilin Wu
 """
 
 import math
+import sys
+
 import gym
 from gym import spaces, logger
 from gym.utils import seeding
 import numpy as np
 import utils.rendering as rendering
+
 
 class ContinuousCartPoleEnv(gym.Env):
     metadata = {
@@ -19,7 +23,13 @@ class ContinuousCartPoleEnv(gym.Env):
         'video.frames_per_second': 50
     }
 
-    def __init__(self):
+    def __init__(self, disturb_type=None, disturb_starts=None, sensor_index=[0, 1, 2, 3], gaussian_std=0.1):
+        """
+        :param disturbance_type: chose the type of disturbances, 'Gauss Noise', 'Sensor Failure'
+        :param disturbance_starts: when the disturbances starts
+        :param sensor_index: sensors effected by disturbances, 0->position, 1->velocity, 2->angle, 3->angular velocity
+        """
+        self.tick = 0
         self.gravity = 9.8
         self.masscart = 1.0
         self.masspole = 0.1
@@ -30,6 +40,16 @@ class ContinuousCartPoleEnv(gym.Env):
         self.tau = 0.02  # seconds between state updates
         self.min_action = -1.0
         self.max_action = 1.0
+        self.disturb_starts = disturb_starts if disturb_starts is not None else sys.maxsize
+        self.disturb_type = disturb_type
+        self.sensor_index = sensor_index
+        self.gaussian_std = gaussian_std
+
+        # check the disturbances configuration
+        assert self.disturb_type in [None, 'Gauss Noise', 'Sensor Failure'], \
+            "The following types of disturbances are available: 'Gauss Noise', 'Sensor Failure'"
+        for i in self.sensor_index:
+            assert i in [0, 1, 2, 3], '{} is not a valid index of sensor.'.format(i)
 
         # Angle at which to fail the episode
         self.theta_threshold_radians = 12 * 2 * math.pi / 360
@@ -52,7 +72,8 @@ class ContinuousCartPoleEnv(gym.Env):
 
         self.seed()
         self.viewer = None
-        self.state = None
+        self.state = None       # real states
+        self.obs_state = None   # observed state, includes disturbances
 
         self.steps_beyond_done = None
 
@@ -75,15 +96,31 @@ class ContinuousCartPoleEnv(gym.Env):
         return (x, x_dot, theta, theta_dot)
 
     def step(self, action):
+        self.tick += 1
         # Cast action to float to strip np trappings
+        action = np.clip(action, self.min_action, self.max_action)  # ensure the action in a reasonable range
         force = self.force_mag * float(action)
         self.state = self.stepPhysics(force)
+        self.obs_state = self.state
         x, x_dot, theta, theta_dot = self.state
         done = x < -self.x_threshold \
             or x > self.x_threshold \
             or theta < -self.theta_threshold_radians \
             or theta > self.theta_threshold_radians
         done = bool(done)
+
+        # add disturbances
+        temp_state = list(self.obs_state)
+        if self.tick >= self.disturb_starts:
+            if self.disturb_type == 'Gauss Noise':
+                for ind_sensor in self.sensor_index:
+                    temp_state[ind_sensor] *= (1 + np.random.normal(0, self.gaussian_std))
+            elif self.disturb_type == 'Sensor Failure':
+                for ind_sensor in self.sensor_index:
+                    temp_state[ind_sensor] = 0.0 # no signal return
+            else:
+                pass
+        self.obs_state = tuple(temp_state) # update state
 
         if not done:
             reward = 1.0
@@ -94,14 +131,14 @@ class ContinuousCartPoleEnv(gym.Env):
         else:
             if self.steps_beyond_done == 0:
                 logger.warn("""
-You are calling 'step()' even though this environment has already returned
-done = True. You should always call 'reset()' once you receive 'done = True'
-Any further steps are undefined behavior.
+                    You are calling 'step()' even though this environment has already returned
+                    done = True. You should always call 'reset()' once you receive 'done = True'
+                    Any further steps are undefined behavior.
                 """)
             self.steps_beyond_done += 1
             reward = 0.0
 
-        return np.array(self.state), reward, done, {}
+        return np.array(self.obs_state), reward, done, {}
 
     def reset(self):
         self.state = self.np_random.uniform(low=-0.05, high=0.05, size=(4,))
