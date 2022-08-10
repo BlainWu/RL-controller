@@ -1,6 +1,11 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import math
+import json
+
+
+def arc_to_degree(theta):
+    return [i*(180 / math.pi) for i in theta]
 
 
 def plot_states(data, steps, grid=False, threshold=True,
@@ -11,7 +16,7 @@ def plot_states(data, steps, grid=False, threshold=True,
     x, x_dot, theta, theta_dot = \
         np.hsplit(data, 4)[0].squeeze(), np.hsplit(data, 4)[1].squeeze(), \
         np.hsplit(data, 4)[2].squeeze(), np.hsplit(data, 4)[3].squeeze()
-    theta = [i*(180 / math.pi) for i in theta]
+    theta = arc_to_degree(theta)
     state = plt.figure('Status', figsize=(7.2, 4.8))
     plt.subplot(221)
     plt.title('Position of Car')
@@ -79,3 +84,36 @@ def plot_action(data, steps, grid=False, max_value=0.5,
 
     if show_fig:
         act_plot.show()
+
+
+def analyse_angle(log_path, show_fig=True, save_path=None):
+    stable_angle = 12.0
+    # load file
+    log_content = []
+    with open(log_path, 'r') as f:
+        log_content = json.load(f)
+    # iterate info
+    multi_series = []
+    max_angle = []
+    for index, text in enumerate(log_content):
+        if index == 0:  # skip the info list
+            multiples = text['multiples']
+        else:
+            multi_series.append(text['Multiplier'])
+            theta_all = np.hsplit(np.array(text['Obs_Record']), 4)[2].squeeze()
+            theta_all = arc_to_degree(theta_all)
+            max_angle.append(max(np.abs(theta_all)))
+    # plot figure
+    max_angle_plt = plt.figure()
+    plt.axes(xscale="log")
+    plt.plot(multi_series, max_angle)
+    plt.ylim((0, 15))
+    plt.title('Maximum angle at different pole lengths')
+    plt.xlabel('multiplier')
+    plt.ylabel('maximum degree')
+    plt.axhline(y=stable_angle, color='red',linestyle='--')
+    if save_path is not None:
+        plt.savefig(save_path)
+        plt.close()
+    if show_fig:
+        max_angle_plt.show()
