@@ -1,4 +1,5 @@
 import os
+import time
 import gym
 import matplotlib.pyplot as plt
 import numpy as np
@@ -8,20 +9,28 @@ from tqdm import tqdm
 from utils.continuous_CartPole import ContinuousCartPoleEnv
 from utils.plot_utils import plot_action, plot_states, generate_multi_series
 from Optimal_Controller import generate_K_from_ARE, optimal_controller
-
+import torch
+from networks.continuous_DQN import Continuous_DQN
+from networks.DQN import Qnet
+from networks.continuous_REINFORCE import PolicyNet
 
 if __name__ == "__main__":
-    # config numpy
+    """Parameters"""
+    # model_path = './models/con_DQN_res21_model_e5_r429.pth'
+    model_path = '../../models/con_REINFORCE_res21_iter12_reward2080.pth'
+    num_steps = 500
+    resolution = 21  # IMPORTANT!!! Should be same as the value in the model
+    actions = np.linspace(-1, 1, resolution)
+    # config
     np.set_printoptions(suppress=True)
     np.set_printoptions(precision=4)
+    device = torch.device("cuda") if torch.cuda.is_available() else torch.device('cpu')
+    DRL_model = torch.load(model_path)
+    DRL_model.eval()
+    DRL_model.to(device)
     # experiments parameters
     multi_series = generate_multi_series(max_multi=10,resolution=20,precision=3)
     num_steps = 500
-    # init controller
-    K = generate_K_from_ARE(len_pole=1)
-    # record data
-    action_record = []
-    obs_record = []
     # generate log file
     log_content = []
     # log header
@@ -45,7 +54,9 @@ if __name__ == "__main__":
             env = ContinuousCartPoleEnv(length=0.5*multi)
             obs = env.reset()
             for step in range(num_steps):
-                action = optimal_controller(K, obs)
+                obs = torch.tensor([obs], dtype=torch.float).to(device)
+                action_idx = DRL_model(obs).argmax().item()
+                action = actions[action_idx]
                 obs, reward, done, info = env.step(action)
                 # record data
                 obs_record.append(obs.tolist())

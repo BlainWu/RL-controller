@@ -117,3 +117,11 @@ def analyse_angle(log_path, show_fig=True, save_path=None):
         plt.close()
     if show_fig:
         max_angle_plt.show()
+
+
+def generate_multi_series(max_multi=10, resolution=20, precision=3):
+    temp_a = np.linspace(1, max_multi, resolution).tolist()
+    temp_b = np.linspace(1 / max_multi, 1, resolution).tolist()
+    multi_series = temp_b[0:resolution - 1] + temp_a
+    multi_series = np.round(multi_series, precision)
+    return multi_series
