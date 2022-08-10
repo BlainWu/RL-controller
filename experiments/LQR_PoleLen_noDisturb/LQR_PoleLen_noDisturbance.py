@@ -1,11 +1,8 @@
 import os
-import gym
-import matplotlib.pyplot as plt
 import numpy as np
 import json
-import time
 from tqdm import tqdm
-from utils.continuous_CartPole import ContinuousCartPoleEnv
+from envs.continuous_CartPole import ContinuousCartPoleEnv
 from utils.plot_utils import plot_action, plot_states, generate_multi_series
 from Optimal_Controller import generate_K_from_ARE, optimal_controller
 

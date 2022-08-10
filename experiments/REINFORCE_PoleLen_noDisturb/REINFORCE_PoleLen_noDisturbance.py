@@ -1,23 +1,15 @@
 import os
-import time
-import gym
-import matplotlib.pyplot as plt
 import numpy as np
 import json
-import time
 from tqdm import tqdm
-from utils.continuous_CartPole import ContinuousCartPoleEnv
+from envs.continuous_CartPole import ContinuousCartPoleEnv
 from utils.plot_utils import plot_action, plot_states, generate_multi_series
-from Optimal_Controller import generate_K_from_ARE, optimal_controller
 import torch
-from networks.continuous_DQN import Continuous_DQN
-from networks.DQN import Qnet
-from networks.continuous_REINFORCE import PolicyNet
 
 if __name__ == "__main__":
     """Parameters"""
-    # model_path = './models/con_DQN_res21_model_e5_r429.pth'
-    model_path = '../../models/con_REINFORCE_res21_iter12_reward2080.pth'
+    # model_path = './models/Ideal_DQN/con_DQN_res21_model_e5_r429.pth'
+    model_path = '../../models/Ideal_REINFORCE/con_REINFORCE_res21_iter12_reward2080.pth'
     num_steps = 500
     resolution = 21  # IMPORTANT!!! Should be same as the value in the model
     actions = np.linspace(-1, 1, resolution)

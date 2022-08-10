@@ -1,16 +1,12 @@
-import gym
 import torch
 import numpy as np
-from networks.continuous_DQN import Continuous_DQN
-from networks.DQN import Qnet
-from networks.continuous_REINFORCE import PolicyNet
-from utils.continuous_CartPole import ContinuousCartPoleEnv
+from envs.continuous_CartPole import ContinuousCartPoleEnv
 from utils.plot_utils import plot_action,plot_states
 import time
 
 """Parameters"""
-#model_path = './models/con_DQN_res21_model_e5_r429.pth'
-model_path = './models/con_REINFORCE_res21_iter12_reward2080.pth'
+#model_path = './models/Ideal_DQN/con_DQN_res21_model_e5_r429.pth'
+model_path = './models/Ideal_REINFORCE/con_REINFORCE_res21_iter12_reward2080.pth'
 num_steps = 800
 resolution = 21  # IMPORTANT!!! Should be same as the value in the model
 actions = np.linspace(-1, 1, resolution)

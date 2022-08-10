@@ -1,8 +1,6 @@
-import gym
-import matplotlib.pyplot as plt
 import numpy as np
 import time
-from utils.continuous_CartPole import ContinuousCartPoleEnv
+from envs.continuous_CartPole import ContinuousCartPoleEnv
 from utils.plot_utils import plot_action, plot_states
 from scipy import linalg
 

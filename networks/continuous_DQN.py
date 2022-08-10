@@ -1,6 +1,4 @@
-import gym
 import numpy as np
-import torch
 import random
 from tqdm import tqdm
 import torch
@@ -8,7 +6,7 @@ import torch.nn.functional as F
 import matplotlib.pyplot as plt
 import utils.rl_utils as rl_utils
 from networks.DQN import Qnet
-from utils.continuous_CartPole import ContinuousCartPoleEnv
+from envs.continuous_CartPole import ContinuousCartPoleEnv
 
 
 class Continuous_DQN:

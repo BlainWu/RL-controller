@@ -1,6 +1,5 @@
-import gym
 import utils.rl_utils as rl_utils
-from utils.continuous_CartPole import ContinuousCartPoleEnv
+from envs.continuous_CartPole import ContinuousCartPoleEnv
 import torch
 import torch.nn.functional as F
 from tqdm import tqdm
@@ -102,7 +101,7 @@ if __name__ == '__main__':
                 if (i_episode + 1) % 10 == 0:
                     pbar.set_postfix({
                         'episode':
-                            '%d' % i * check_time + i_episode,
+                            '%d' % (i * check_time + i_episode),
                         'return':
                             '%.3f' % avg_return
                     })

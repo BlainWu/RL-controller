@@ -24,18 +24,22 @@ class ContinuousCartPoleEnv(gym.Env):
     }
 
     def __init__(self, mass_cart=1.0, mass_pole=0.1, length=0.5,
-                 disturb_type=None, disturb_starts=None, sensor_index=[0, 1, 2, 3], gaussian_std=0.1):
+                 disturb_type=None, disturb_starts=None, sensor_index=[0, 1, 2, 3], gaussian_std=0.1,
+                 random_len=None):
         """
-        :param disturbance_type: chose the type of disturbances, 'Gauss Noise', 'Sensor Failure'
-        :param disturbance_starts: when the disturbances starts
+        :param disturb_type: chose the type of disturbances, 'Gauss Noise', 'Sensor Failure'
+        :param disturb_starts: when the disturbances starts
         :param sensor_index: sensors effected by disturbances, 0->position, 1->velocity, 2->angle, 3->angular velocity
+        :param random_len: the standard variance of normal distribution, e.g. 0.1
+        :param penalise: the ways to generate rewards,
         """
         self.tick = 0
         self.gravity = 9.8
         self.masscart = mass_cart
         self.masspole = mass_pole
         self.total_mass = (self.masspole + self.masscart)
-        self.length = length  # actually half the pole's length
+        # actually half the pole's length
+        self.length = np.random.normal(length, random_len) if random_len is not None else length
         self.polemass_length = (self.masspole * self.length)
         self.force_mag = 30.0
         self.tau = 0.02  # seconds between state updates
@@ -76,8 +80,6 @@ class ContinuousCartPoleEnv(gym.Env):
         self.state = None       # real states
         self.obs_state = None   # observed state, includes disturbances
 
-        self.steps_beyond_done = None
-
     def seed(self, seed=None):
         self.np_random, seed = seeding.np_random(seed)
         return [seed]
@@ -110,6 +112,11 @@ class ContinuousCartPoleEnv(gym.Env):
             or theta > self.theta_threshold_radians
         done = bool(done)
 
+        if not done:
+            reward = 1.0
+        else:
+            reward = 0.0
+
         # add disturbances
         temp_state = list(self.obs_state)
         if self.tick >= self.disturb_starts:
@@ -118,27 +125,10 @@ class ContinuousCartPoleEnv(gym.Env):
                     temp_state[ind_sensor] *= (1 + np.random.normal(0, self.gaussian_std))
             elif self.disturb_type == 'Sensor Failure':
                 for ind_sensor in self.sensor_index:
-                    temp_state[ind_sensor] = 0.0 # no signal return
+                    temp_state[ind_sensor] = 0.0  # no signal return
             else:
                 pass
-        self.obs_state = tuple(temp_state) # update state
-
-        if not done:
-            reward = 1.0
-        elif self.steps_beyond_done is None:
-            # Pole just fell!
-            self.steps_beyond_done = 0
-            reward = 1.0
-        else:
-            if self.steps_beyond_done == 0:
-                # logger.warn("""
-                #     You are calling 'step()' even though this environment has already returned
-                #     done = True. You should always call 'reset()' once you receive 'done = True'
-                #     Any further steps are undefined behavior.
-                # """)
-                pass
-            self.steps_beyond_done += 1
-            reward = 0.0
+        self.obs_state = tuple(temp_state)  # update state
 
         return np.array(self.obs_state), reward, done, {}
 
