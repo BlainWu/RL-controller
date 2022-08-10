@@ -1,6 +1,6 @@
 import torch
 import numpy as np
-from envs.continuous_CartPole import ContinuousCartPoleEnv
+from envs.continuous_cartpole_v1 import ContinuousCartPoleEnv
 from utils.plot_utils import plot_action,plot_states
 import time
 

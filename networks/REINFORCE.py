@@ -1,5 +1,5 @@
 import utils.rl_utils as rl_utils
-from envs.continuous_CartPole import ContinuousCartPoleEnv
+from envs.continuous_cartpole_v1 import ContinuousCartPoleEnv
 import torch
 import torch.nn.functional as F
 from tqdm import tqdm

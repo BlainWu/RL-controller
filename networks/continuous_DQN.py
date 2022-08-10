@@ -6,7 +6,7 @@ import torch.nn.functional as F
 import matplotlib.pyplot as plt
 import utils.rl_utils as rl_utils
 from networks.DQN import Qnet
-from envs.continuous_CartPole import ContinuousCartPoleEnv
+from envs.continuous_cartpole_v1 import ContinuousCartPoleEnv
 
 
 class Continuous_DQN:

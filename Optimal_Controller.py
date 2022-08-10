@@ -1,6 +1,6 @@
 import numpy as np
 import time
-from envs.continuous_CartPole import ContinuousCartPoleEnv
+from envs.continuous_cartpole_v1 import ContinuousCartPoleEnv
 from utils.plot_utils import plot_action, plot_states
 from scipy import linalg
 

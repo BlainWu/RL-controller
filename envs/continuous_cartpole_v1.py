@@ -4,7 +4,7 @@ Copied from http://incompleteideas.net/sutton/book/code/pole.c
 permalink: https://perma.cc/C9ZM-652R
 
 Continuous version by Ian Danforth
-Modified by Peilin Wu
+Modified by Peilin Wu, v1 - added some disturbances
 """
 
 import math

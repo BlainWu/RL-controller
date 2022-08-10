@@ -2,7 +2,7 @@ import os
 import numpy as np
 import json
 from tqdm import tqdm
-from envs.continuous_CartPole import ContinuousCartPoleEnv
+from envs.continuous_cartpole_v1 import ContinuousCartPoleEnv
 from utils.plot_utils import plot_action, plot_states, generate_multi_series
 import torch
 

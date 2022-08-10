@@ -4,7 +4,7 @@ Copied from http://incompleteideas.net/sutton/book/code/pole.c
 permalink: https://perma.cc/C9ZM-652R
 
 Continuous version by Ian Danforth
-Modified by Peilin Wu
+Modified by Peilin Wu, v2 - added some disturbances and flexible rewards for control system research
 """
 
 import math
@@ -105,13 +105,14 @@ class ContinuousCartPoleEnv(gym.Env):
         force = self.force_mag * float(action)
         self.state = self.stepPhysics(force)
         self.obs_state = self.state
+
+        # generate rewards
         x, x_dot, theta, theta_dot = self.state
         done = x < -self.x_threshold \
             or x > self.x_threshold \
             or theta < -self.theta_threshold_radians \
             or theta > self.theta_threshold_radians
         done = bool(done)
-
         if not done:
             reward = 1.0
         else:
@@ -129,7 +130,6 @@ class ContinuousCartPoleEnv(gym.Env):
             else:
                 pass
         self.obs_state = tuple(temp_state)  # update state
-
         return np.array(self.obs_state), reward, done, {}
 
     def reset(self):
