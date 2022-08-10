@@ -3,7 +3,8 @@ import matplotlib.pyplot as plt
 import math
 
 
-def plot_states(data, steps, grid=False, threshold=True, auto_adjust=False):
+def plot_states(data, steps, grid=False, threshold=True,
+                auto_adjust=False, show_fig=False, save_path=None):
     data = np.array(data)
     axis = [i for i in range(steps)]
     # unzip data
@@ -51,10 +52,15 @@ def plot_states(data, steps, grid=False, threshold=True, auto_adjust=False):
     plt.subplots_adjust(top=0.92, bottom=0.08, left=0.10,
                         right=0.95, hspace=0.35, wspace=0.35)
 
-    state.show()
+    if save_path is not None:
+        plt.savefig(save_path)
+        plt.close()
+    if show_fig:
+        state.show()
 
 
-def plot_action(data, steps, grid=False, max_value=0.5):
+def plot_action(data, steps, grid=False, max_value=0.5,
+                show_fig=True, save_path=None):
     x_axis = [i for i in range(steps)]
     # calculate metric
     var = round(np.var(data), 4)
@@ -66,4 +72,10 @@ def plot_action(data, steps, grid=False, max_value=0.5):
     plt.axis([0, steps, -max_value, max_value])
     plt.text(0.1, 0.8, r'$\mu={},\ \sigma={}$'.format(mean, var), transform=ax.transAxes)
     plt.grid(grid)
-    act_plot.show()
+
+    if save_path is not None:
+        plt.savefig(save_path)
+        plt.close()
+
+    if show_fig:
+        act_plot.show()

@@ -23,7 +23,8 @@ class ContinuousCartPoleEnv(gym.Env):
         'video.frames_per_second': 50
     }
 
-    def __init__(self, disturb_type=None, disturb_starts=None, sensor_index=[0, 1, 2, 3], gaussian_std=0.1):
+    def __init__(self, mass_cart=1.0, mass_pole=0.1, length=0.5,
+                 disturb_type=None, disturb_starts=None, sensor_index=[0, 1, 2, 3], gaussian_std=0.1):
         """
         :param disturbance_type: chose the type of disturbances, 'Gauss Noise', 'Sensor Failure'
         :param disturbance_starts: when the disturbances starts
@@ -31,10 +32,10 @@ class ContinuousCartPoleEnv(gym.Env):
         """
         self.tick = 0
         self.gravity = 9.8
-        self.masscart = 1.0
-        self.masspole = 0.1
+        self.masscart = mass_cart
+        self.masspole = mass_pole
         self.total_mass = (self.masspole + self.masscart)
-        self.length = 0.5  # actually half the pole's length
+        self.length = length  # actually half the pole's length
         self.polemass_length = (self.masspole * self.length)
         self.force_mag = 30.0
         self.tau = 0.02  # seconds between state updates
@@ -130,11 +131,12 @@ class ContinuousCartPoleEnv(gym.Env):
             reward = 1.0
         else:
             if self.steps_beyond_done == 0:
-                logger.warn("""
-                    You are calling 'step()' even though this environment has already returned
-                    done = True. You should always call 'reset()' once you receive 'done = True'
-                    Any further steps are undefined behavior.
-                """)
+                # logger.warn("""
+                #     You are calling 'step()' even though this environment has already returned
+                #     done = True. You should always call 'reset()' once you receive 'done = True'
+                #     Any further steps are undefined behavior.
+                # """)
+                pass
             self.steps_beyond_done += 1
             reward = 0.0
 

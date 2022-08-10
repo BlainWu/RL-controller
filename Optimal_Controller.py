@@ -7,8 +7,8 @@ from utils.plot_utils import plot_action, plot_states
 from scipy import linalg
 
 
-def generate_K_from_ARE(weight_R = 1, weight_Q = 4, m_cart = 1, m_pole = 0.1, len_pole = 0.5,
-                      grav = 9.8):
+def generate_K_from_ARE(weight_R=1, weight_Q=4, m_cart=1, m_pole=0.1,
+                        len_pole=0.5, grav=9.8):
     # system equation
     m_all = m_cart + m_pole
     temp = grav / (len_pole * (4.0 / 3.0 - m_pole / m_all))
@@ -42,12 +42,13 @@ def optimal_controller(K, state):
 
 if __name__ == "__main__":
     # init env
-    env = ContinuousCartPoleEnv(disturb_type='Gauss Noise', sensor_index=[0, 1, 2, 3],
-                                disturb_starts=100, gaussian_std=0.5)
+    # env = ContinuousCartPoleEnv(disturb_type='Gauss Noise', sensor_index=[0, 1, 2, 3],
+    #                             disturb_starts=100, gaussian_std=0.3)
+    env = ContinuousCartPoleEnv()
     obs = env.reset()
-    num_steps = 300
+    num_steps = 500
     # init controller
-    K = generate_K_from_ARE(len_pole=5)
+    K = generate_K_from_ARE(len_pole=1)
     # record data
     action_record = []
     obs_record = []
