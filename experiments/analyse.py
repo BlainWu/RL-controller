@@ -4,15 +4,16 @@ import numpy as np
 import matplotlib.pyplot as plt
 import json
 from utils.plot_utils import analyse_angle
+from utils.plot_utils import generate_RL_multi_poles_test
+from networks.REINFORCE import PolicyNet
 
 
 if __name__ == "__main__":
-    # analyse_angle(log_path='./LQR_PoleLen_noDisturb/figures/logger.json',
-    #               save_path='./LQR_PoleLen_noDisturb/angle_analysis.png')
-    # analyse_angle(log_path='./REINFORCE_PoleLen_noDisturb/figures/logger.json',
-    #               save_path='./REINFORCE_PoleLen_noDisturb/angle_analysis.png')
-    # analyse_angle(log_path='./random_len_REINFORCE_PoleLen_noDisturb/figures_every1_8639/logger.json',
-    #               save_path='./random_len_REINFORCE_PoleLen_noDisturb/angle_analysis_8639.png')
-    figure_dir = './Incremental_Signal_REINFORCE/figures'
+    model_path = '../models/REINFORCE_Penalise_Absolute_Signal/con_REINFORCE_res21_iter23_reward937.pth'
+    figure_dir = './Absolute_Signal_REINFORCE/figures_937'
+
+
+    generate_RL_multi_poles_test(model_path, figure_dir)
+
     analyse_angle(log_path=os.path.join(figure_dir,'logger.json'),
-                  save_path=os.path.join(os.path.dirname(figure_dir), 'anale_analysis.png'))
+                  save_path=os.path.join(os.path.dirname(figure_dir), 'anale_analysis_4453.png'))
