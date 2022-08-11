@@ -17,7 +17,7 @@ import numpy as np
 import utils.rendering as rendering
 
 
-class ContinuousCartPoleEnv(gym.Env):
+class ContinuousCartPole_V2(gym.Env):
     metadata = {
         'render.modes': ['human', 'rgb_array'],
         'video.frames_per_second': 50
@@ -25,7 +25,7 @@ class ContinuousCartPoleEnv(gym.Env):
 
     def __init__(self, mass_cart=1.0, mass_pole=0.1, length=0.5,
                  disturb_type=None, disturb_starts=None, sensor_index=[0, 1, 2, 3], gaussian_std=0.1,
-                 random_len=None):
+                 random_len=None, penalise=None):
         """
         :param disturb_type: chose the type of disturbances, 'Gauss Noise', 'Sensor Failure'
         :param disturb_starts: when the disturbances starts
@@ -49,12 +49,18 @@ class ContinuousCartPoleEnv(gym.Env):
         self.disturb_type = disturb_type
         self.sensor_index = sensor_index
         self.gaussian_std = gaussian_std
+        self.penalise = penalise
+        self.last_action = 0.0
 
         # check the disturbances configuration
         assert self.disturb_type in [None, 'Gauss Noise', 'Sensor Failure'], \
             "The following types of disturbances are available: 'Gauss Noise', 'Sensor Failure'"
         for i in self.sensor_index:
             assert i in [0, 1, 2, 3], '{} is not a valid index of sensor.'.format(i)
+
+        # check the rewards configuration
+        assert self.penalise in [None, 'Absolute Control Signal', 'Angle Error', 'Control Signal Increments'], \
+            "The following types of penalise are available: 'Control Signal', 'Angle Error'"
 
         # Angle at which to fail the episode
         self.theta_threshold_radians = 12 * 2 * math.pi / 360
@@ -103,6 +109,7 @@ class ContinuousCartPoleEnv(gym.Env):
         # Cast action to float to strip np trappings
         action = np.clip(action, self.min_action, self.max_action)  # ensure the action in a reasonable range
         force = self.force_mag * float(action)
+
         self.state = self.stepPhysics(force)
         self.obs_state = self.state
 
@@ -113,10 +120,24 @@ class ContinuousCartPoleEnv(gym.Env):
             or theta < -self.theta_threshold_radians \
             or theta > self.theta_threshold_radians
         done = bool(done)
-        if not done:
-            reward = 1.0
-        else:
-            reward = 0.0
+
+        if self.penalise is None:
+            if not done:
+                reward = 1.0
+            else:
+                reward = 0.0
+        elif self.penalise == 'Absolute Control Signal':
+            if not done:
+                reward = 1.0 - abs(action)
+            else:
+                reward = 0.0
+        elif self.penalise == 'Control Signal Increments':
+            if not done:
+                reward = 1.0 - abs(action-self.last_action)
+            else:
+                reward = 0.0
+
+        self.last_action = action # update action record
 
         # add disturbances
         temp_state = list(self.obs_state)

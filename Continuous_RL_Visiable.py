@@ -1,12 +1,14 @@
 import torch
 import numpy as np
 from envs.continuous_cartpole_v1 import ContinuousCartPoleEnv
+from networks.REINFORCE import PolicyNet
 from utils.plot_utils import plot_action,plot_states
 import time
 
 """Parameters"""
 #model_path = './models/Ideal_DQN/con_DQN_res21_model_e5_r429.pth'
-model_path = './models/Ideal_REINFORCE/con_REINFORCE_res21_iter12_reward2080.pth'
+# model_path = './models/Ideal_REINFORCE/con_REINFORCE_res21_iter12_reward2080.pth'
+model_path = './models/REINFORCE_Penalise_Incremental_Signal/con_REINFORCE_res21_iter19_reward1707.pth'
 num_steps = 800
 resolution = 21  # IMPORTANT!!! Should be same as the value in the model
 actions = np.linspace(-1, 1, resolution)

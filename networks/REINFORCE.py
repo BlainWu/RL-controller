@@ -1,5 +1,7 @@
+import os.path
+
 import utils.rl_utils as rl_utils
-from envs.continuous_cartpole_v1 import ContinuousCartPoleEnv
+from envs.continuous_cartpole_v2 import ContinuousCartPole_V2
 import torch
 import torch.nn.functional as F
 from tqdm import tqdm
@@ -55,14 +57,16 @@ class REINFORCE:
 
 if __name__ == '__main__':
     lr = 1e-3
-    check_time = 100 # how often check the model to save
-    iterations = 30 # number of round
+    check_time = 100    # how often check the model to save
+    iterations = 60     # number of round
     resolution = 21
     hidden_dim = 128
     gamma = 0.98
     device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
-    env = ContinuousCartPoleEnv()
-
+    env = ContinuousCartPole_V2(penalise='Control Signal Increments')
+    models_dir = '../models/REINFORCE_Penalise_Incremental_Signal'
+    if not os.path.exists(models_dir):
+        os.mkdir(models_dir)
     # seeds set
     env.seed(0)
     torch.manual_seed(0)
@@ -107,12 +111,11 @@ if __name__ == '__main__':
                     })
                 pbar.update(1)
 
-            # save the best model
-            if avg_return > max_return:
-                # save models
-                torch.save(agent.policy_net,
-                           '../models/con_REINFORCE_res{}_iter{}_reward{}.pth'.format(resolution, i, int(avg_return)))
-                max_return = avg_return
+
+            # save models
+            torch.save(agent.policy_net,os.path.join(models_dir,
+                            'con_REINFORCE_res{}_iter{}_reward{}.pth'.format(resolution, i, int(avg_return))))
+            max_return = avg_return
 
     episodes_list = list(range(len(return_list)))
     plt.plot(episodes_list, return_list)
