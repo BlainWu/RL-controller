@@ -71,13 +71,14 @@ if __name__ == '__main__':
     logger_path = os.path.join(model_dir,'logger.json')
     log_content = []
     parameter_dict = {}
-    parameter_dict['lr'] = 1e-3
-    parameter_dict['check_time'] = 100
-    parameter_dict['iterations'] = 30
-    parameter_dict['resolution'] = 21
-    parameter_dict['hidden_dim'] = 128
-    parameter_dict['gamma'] = 0.98
-    parameter_dict['random_len_std'] = 0.1
+    parameter_dict['lr'] = lr
+    parameter_dict['check_time'] = check_time
+    parameter_dict['iterations'] = iterations
+    parameter_dict['resolution'] = resolution
+    parameter_dict['hidden_dim'] = hidden_dim
+    parameter_dict['gamma'] = gamma
+    parameter_dict['random_len_std'] = random_len_std
+    parameter_dict['extra_info'] = 'None'
     log_content.append(parameter_dict)
     with open(logger_path, 'w') as file:
         json_file = json.dumps(log_content, indent=3)

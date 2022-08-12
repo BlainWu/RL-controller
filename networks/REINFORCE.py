@@ -7,6 +7,7 @@ import torch.nn.functional as F
 from tqdm import tqdm
 import numpy as np
 import matplotlib.pyplot as plt
+import json
 
 
 class PolicyNet(torch.nn.Module):
@@ -73,6 +74,21 @@ if __name__ == '__main__':
     state_dim = env.observation_space.shape[0]
     action_dim = resolution
     agent = REINFORCE(state_dim, hidden_dim, action_dim, lr, gamma, device)
+    # logger
+    logger_path = os.path.join(models_dir, 'logger.json')
+    log_content = []
+    parameter_dict = {}
+    parameter_dict['lr'] = lr
+    parameter_dict['check_time'] = check_time
+    parameter_dict['iterations'] = iterations
+    parameter_dict['resolution'] = resolution
+    parameter_dict['hidden_dim'] = hidden_dim
+    parameter_dict['gamma'] = gamma
+    parameter_dict['rewards'] = '1 - '
+    log_content.append(parameter_dict)
+    with open(logger_path, 'w') as file:
+        json_file = json.dumps(log_content, indent=3)
+        file.write(json_file)
 
     max_return = 0
     return_list = []
