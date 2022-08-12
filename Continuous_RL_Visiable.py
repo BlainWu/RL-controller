@@ -1,6 +1,6 @@
 import torch
 import numpy as np
-from envs.continuous_cartpole_v1 import ContinuousCartPoleEnv
+from envs.continuous_cartpole_v1 import ContinuousCartPole_V1
 from networks.REINFORCE import PolicyNet
 from utils.plot_utils import plot_action,plot_states
 import time
@@ -12,7 +12,7 @@ resolution = 21  # IMPORTANT!!! Should be same as the value in the model
 actions = np.linspace(-1, 1, resolution)
 
 """ Init """
-env = ContinuousCartPoleEnv()
+env = ContinuousCartPole_V1()
 # env = ContinuousCartPoleEnv(disturb_type='Gauss Noise', sensor_index=[0, 1, 2, 3],
 #                                 disturb_starts=100, gaussian_std=0.3)
 obs = env.reset()
@@ -29,7 +29,7 @@ step_ct = 0
 action_record = []
 obs_record = []
 
-while(step_ct < num_steps):
+while step_ct < num_steps:
     obs = torch.tensor([obs], dtype=torch.float).to(device)
     action_idx = DRL_model(obs).argmax().item()
     action = actions[action_idx]

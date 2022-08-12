@@ -5,7 +5,9 @@ import json
 import os
 import torch
 from tqdm import tqdm
-from envs.continuous_cartpole_v1 import ContinuousCartPoleEnv
+from envs.continuous_cartpole_v1 import ContinuousCartPole_V1
+from shapely.geometry import LineString
+
 
 def arc_to_degree(theta):
     return [i*(180 / math.pi) for i in theta]
@@ -88,7 +90,8 @@ def plot_action(data, steps, grid=False, max_value=0.5,
         act_plot.show()
 
 
-def analyse_angle(log_path, show_fig=True, save_path=None):
+def analyse_angle(log_path, show_fig=True, save_path=None, intersection=True):
+    stable_margin = 0.0
     stable_angle = 12.0
     # load file
     log_content = []
@@ -110,26 +113,75 @@ def analyse_angle(log_path, show_fig=True, save_path=None):
     plt.axes(xscale="log")
     plt.plot(multi_series, max_angle)
     plt.ylim((0, 15))
+    ax = plt.gca()
     plt.title('Maximum angle at different pole lengths')
     plt.xlabel('multiplier')
     plt.ylabel('maximum degree')
-    plt.axhline(y=stable_angle, color='red',linestyle='--')
+    plt.axhline(y=stable_angle, color='red', linestyle='--')
+
+    # draw the intersections
+    if intersection:
+        _x = []
+        _y = []
+        inter_points = []
+        for index in range(len(multi_series) - 1):
+            if max_angle[index] >= stable_angle > max_angle[index + 1] or \
+                    max_angle[index] <= stable_angle < max_angle[index + 1]:
+                _x.append(multi_series[index])
+                _y.append(max_angle[index])
+                _x.append(multi_series[index + 1])
+                _y.append(max_angle[index + 1])
+                inter_points.append(np.interp(stable_angle, _y, _x))
+                _x = []
+                _y = []
+
+        _margin_list = []
+        inter_points = [round(i, 2) for i in inter_points]
+        len_inter = len(inter_points)
+        if len_inter >= 2:
+            # points pre-process
+            if len_inter == 2:
+                pass
+            else:
+                _range = []
+                for i in range(len_inter - 1):
+                    _margin_list.append(inter_points[i + 1] - inter_points[i])
+                    _margin_list = [round(i, 2) for i in _margin_list]
+                _max_index = _margin_list.index(max(_margin_list))
+                inter_points = inter_points[_max_index:_max_index + 2]
+            # draw points and infobox
+            for point in inter_points:
+                plt.plot(point, stable_angle, 'ro')
+                plt.axvline(x=point, color='red', linestyle=':')
+            _min = min(inter_points)
+            _max = max(inter_points)
+            stable_margin = _max - _min
+            info_box = '\n'.join((r'$min=%.2f$' % (_min, ),
+                                  r'$max=%.2f$' % (_max,),
+                                  r'$ranges=%.2f$' % (stable_margin, )))
+            props = dict(boxstyle='round', facecolor='wheat', alpha=0.5)
+            ax.text(0.02, 0.15, info_box, transform=ax.transAxes, fontsize=9,
+                    verticalalignment='top', bbox=props)
+
+
     if save_path is not None:
         plt.savefig(save_path)
         plt.close()
     if show_fig:
         max_angle_plt.show()
 
+    return stable_margin
 
-def generate_multi_series(max_multi=10, resolution=20, precision=3):
+
+def generate_multi_series(max_multi=20, resolution=20, precision=3):
     temp_a = np.linspace(1, max_multi, resolution).tolist()
-    temp_b = np.linspace(1 / max_multi, 1, resolution).tolist()
+    temp_b = np.linspace(1 / 15, 1, 25).tolist()
     multi_series = temp_b[0:resolution - 1] + temp_a
     multi_series = np.round(multi_series, precision)
     return multi_series
 
 
-def generate_RL_multi_poles_test(model_path, figures_dir, num_steps=500):
+def generate_RL_multi_poles_test(model_path, figures_dir, num_steps=500, max_multi=20, samplings=30):
     """Parameters"""
     resolution = 21  # IMPORTANT!!! Should be same as the value in the model
     actions = np.linspace(-1, 1, resolution)
@@ -141,7 +193,7 @@ def generate_RL_multi_poles_test(model_path, figures_dir, num_steps=500):
     DRL_model.eval()
     DRL_model.to(device)
     # experiments parameters
-    multi_series = generate_multi_series(max_multi=10, resolution=20, precision=3)
+    multi_series = generate_multi_series(max_multi=max_multi,resolution=samplings)
     num_steps = 500
     # generate log file
     log_content = []
@@ -168,7 +220,7 @@ def generate_RL_multi_poles_test(model_path, figures_dir, num_steps=500):
             action_record = []
             info = {}
             # init env
-            env = ContinuousCartPoleEnv(length=0.5 * multi)
+            env = ContinuousCartPole_V1(length=0.5 * multi)
             obs = env.reset()
             for step in range(num_steps):
                 obs = torch.tensor([obs], dtype=torch.float).to(device)
@@ -190,4 +242,29 @@ def generate_RL_multi_poles_test(model_path, figures_dir, num_steps=500):
             log_content.append(info)
 
         json_f = json.dumps(log_content, indent=3)
+        file.write(json_f)
+
+
+def plot_all_models_angle_error(models_path, figure_dir, max_multi=40, samplings=40):
+    model_lists = os.listdir(models_path)
+    model_lists.remove('logger.json')
+    if not os.path.exists(figure_dir):
+        os.mkdir(figure_dir)
+    logger_content = []
+    margin_data = {}
+    with open(os.path.join(figure_dir, 'angle_range_record.json'), 'w') as file:
+        for model in tqdm(model_lists):
+            model_path = os.path.join(models_path, model)
+            print(model)
+            imgs_dir = os.path.join(figure_dir, model.split('.')[0])
+            if not os.path.exists(imgs_dir):
+                os.mkdir(imgs_dir)
+
+            generate_RL_multi_poles_test(model_path, imgs_dir, max_multi=max_multi, samplings=samplings)
+
+            margin = analyse_angle(log_path=os.path.join(imgs_dir, 'logger.json'),
+                          save_path=os.path.join(figure_dir, '{}.png'.format(model.split('.')[0])))
+            margin_data[model.split('.')[0]] = margin
+        logger_content.append(margin_data)
+        json_f = json.dumps(logger_content, indent=3)
         file.write(json_f)

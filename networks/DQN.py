@@ -6,7 +6,7 @@ import torch.nn.functional as F
 import matplotlib.pyplot as plt
 import utils.rl_utils as rl_utils
 from temp.discrete_DQN import Qnet
-from envs.continuous_cartpole_v1 import ContinuousCartPoleEnv
+from envs.continuous_cartpole_v1 import ContinuousCartPole_V1
 from envs.continuous_cartpole_v2 import ContinuousCartPole_V2
 import os
 import json
@@ -69,7 +69,7 @@ class Continuous_DQN:
 
 if __name__ == "__main__":
     models_dir = '../models/DQN_origin_30check'
-    env = ContinuousCartPoleEnv()
+    env = ContinuousCartPole_V1()
     if not os.path.exists(models_dir):
         os.mkdir(models_dir)
 

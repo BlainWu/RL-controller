@@ -17,7 +17,7 @@ import numpy as np
 import utils.rendering as rendering
 
 
-class ContinuousCartPoleEnv(gym.Env):
+class ContinuousCartPole_V1(gym.Env):
     metadata = {
         'render.modes': ['human', 'rgb_array'],
         'video.frames_per_second': 50

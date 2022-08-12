@@ -1,6 +1,6 @@
 import numpy as np
 import time
-from envs.continuous_cartpole_v1 import ContinuousCartPoleEnv
+from envs.continuous_cartpole_v1 import ContinuousCartPole_V1
 from utils.plot_utils import plot_action, plot_states
 from scipy import linalg
 
@@ -42,7 +42,7 @@ if __name__ == "__main__":
     # init env
     # env = ContinuousCartPoleEnv(disturb_type='Gauss Noise', sensor_index=[0, 1, 2, 3],
     #                             disturb_starts=100, gaussian_std=0.3)
-    env = ContinuousCartPoleEnv()
+    env = ContinuousCartPole_V1()
     obs = env.reset()
     num_steps = 500
     # init controller

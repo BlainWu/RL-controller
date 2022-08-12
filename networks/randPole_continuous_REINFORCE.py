@@ -1,5 +1,5 @@
 import utils.rl_utils as rl_utils
-from envs.continuous_cartpole_v1 import ContinuousCartPoleEnv
+from envs.continuous_cartpole_v1 import ContinuousCartPole_V1
 import torch
 import torch.nn.functional as F
 from tqdm import tqdm
@@ -84,7 +84,7 @@ if __name__ == '__main__':
         json_file = json.dumps(log_content, indent=3)
         file.write(json_file)
 
-    env = ContinuousCartPoleEnv()
+    env = ContinuousCartPole_V1()
     # env.seed(0)
     state_dim = env.observation_space.shape[0]
     action_dim = resolution
@@ -97,7 +97,7 @@ if __name__ == '__main__':
     for i in range(iterations):
         with tqdm(total = check_time, desc='Iteration %d' % i) as pbar:
             for i_episode in range(check_time):
-                env = ContinuousCartPoleEnv(random_len=0.1)
+                env = ContinuousCartPole_V1(random_len=0.1)
                 episode_return = 0
                 transition_dict = {
                     'states': [],
