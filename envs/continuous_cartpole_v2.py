@@ -133,7 +133,12 @@ class ContinuousCartPole_V2(gym.Env):
                 reward = 0.0
         elif self.penalise == 'Control Signal Increments':
             if not done:
-                reward = 1.0 - abs(action-self.last_action)
+                reward = 1.0 - 4*abs(action-self.last_action)
+            else:
+                reward = 0.0
+        elif self.penalise == 'Angle Error':
+            if not done:
+                reward = 1 + 12/(0.1 + abs(theta*(180 / math.pi)))
             else:
                 reward = 0.0
 

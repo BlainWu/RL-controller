@@ -1,7 +1,5 @@
 import gym
 import torch
-import numpy as np
-from networks.DQN import Qnet, DQN
 import time
 
 """Parameters"""

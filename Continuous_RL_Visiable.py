@@ -6,17 +6,15 @@ from utils.plot_utils import plot_action,plot_states
 import time
 
 """Parameters"""
-#model_path = './models/Ideal_DQN/con_DQN_res21_model_e5_r429.pth'
-# model_path = './models/Ideal_REINFORCE/con_REINFORCE_res21_iter12_reward2080.pth'
-model_path = './models/REINFORCE_Penalise_Incremental_Signal/con_REINFORCE_res21_iter19_reward1707.pth'
+model_path = './models/REINFORCE_Penalise_Angle_Error_1/con_REINFORCE_res21_iter23_reward48106.pth'
 num_steps = 800
 resolution = 21  # IMPORTANT!!! Should be same as the value in the model
 actions = np.linspace(-1, 1, resolution)
 
 """ Init """
-# env = ContinuousCartPoleEnv()
-env = ContinuousCartPoleEnv(disturb_type='Gauss Noise', sensor_index=[0, 1, 2, 3],
-                                disturb_starts=100, gaussian_std=0.3)
+env = ContinuousCartPoleEnv()
+# env = ContinuousCartPoleEnv(disturb_type='Gauss Noise', sensor_index=[0, 1, 2, 3],
+#                                 disturb_starts=100, gaussian_std=0.3)
 obs = env.reset()
 device = torch.device("cuda") if torch.cuda.is_available() else torch.device('cpu')
 DRL_model = torch.load(model_path)

@@ -154,7 +154,12 @@ def generate_RL_multi_poles_test(model_path, figures_dir, num_steps=500):
     log_content.append(info_experiment)
     result_dir = os.path.join(os.getcwd(), figures_dir)
     if not os.path.exists(result_dir):
-        os.mkdir(result_dir)
+        try:
+            os.mkdir(result_dir)
+        except FileNotFoundError:
+            os.mkdir(os.path.dirname(result_dir))
+            os.mkdir(result_dir)
+
 
     with open(os.path.join(result_dir, 'logger.json'), 'w') as file:
         for index, multi in enumerate(tqdm(multi_series)):

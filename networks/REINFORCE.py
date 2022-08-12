@@ -57,15 +57,15 @@ class REINFORCE:
 
 
 if __name__ == '__main__':
+    env = ContinuousCartPole_V2(penalise='Angle Error')
+    models_dir = '../models/REINFORCE_Penalise_Angle_Error_1' # make sure you change it !
     lr = 1e-3
     check_time = 100    # how often check the model to save
-    iterations = 60     # number of round
+    iterations = 30     # number of round
     resolution = 21
     hidden_dim = 128
     gamma = 0.98
     device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
-    env = ContinuousCartPole_V2(penalise='Control Signal Increments')
-    models_dir = '../models/REINFORCE_Penalise_Incremental_Signal'
     if not os.path.exists(models_dir):
         os.mkdir(models_dir)
     # seeds set
@@ -84,7 +84,7 @@ if __name__ == '__main__':
     parameter_dict['resolution'] = resolution
     parameter_dict['hidden_dim'] = hidden_dim
     parameter_dict['gamma'] = gamma
-    parameter_dict['rewards'] = '1 - '
+    parameter_dict['rewards'] = 'reward = 1 + 12/(0.1 + abs(theta*(180 / math.pi))); reward = 0'
     log_content.append(parameter_dict)
     with open(logger_path, 'w') as file:
         json_file = json.dumps(log_content, indent=3)
@@ -93,7 +93,7 @@ if __name__ == '__main__':
     max_return = 0
     return_list = []
     for i in range(iterations):
-        with tqdm(total = check_time, desc='Iteration %d' % i) as pbar:
+        with tqdm(total=check_time, desc='Iteration %d' % i) as pbar:
             for i_episode in range(check_time):
                 episode_return = 0
                 transition_dict = {
