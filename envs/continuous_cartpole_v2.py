@@ -59,7 +59,8 @@ class ContinuousCartPole_V2(gym.Env):
             assert i in [0, 1, 2, 3], '{} is not a valid index of sensor.'.format(i)
 
         # check the rewards configuration
-        assert self.penalise in [None, 'Absolute Control Signal', 'Angle Error', 'Control Signal Increments'], \
+        assert self.penalise in [None, 'Absolute Control Signal', 'Angle Error', 'Control Signal Increments',
+                                 'Angle Position Error','Angle Position Error with Control Signal'], \
             "The following types of penalise are available: 'Control Signal', 'Angle Error'"
 
         # Angle at which to fail the episode
@@ -141,9 +142,19 @@ class ContinuousCartPole_V2(gym.Env):
                 reward = 1 + 12/(0.1 + abs(theta*(180 / math.pi)))
             else:
                 reward = 0.0
+        elif self.penalise == 'Angle Position Error':
+            if not done:
+                reward = 1 + 12/(12 + abs(theta*(180 / math.pi))) + abs(2.4/(2.4 + abs(x)))
+            else:
+                reward = -3
+        elif self.penalise == 'Angle Position Error with Control Signal':
+            if not done:
+                reward = (2 * 12/(12 + abs(theta*(180 / math.pi))) + 3*2.4/(2.4 + abs(x)) + 2.0/(2.0 + abs(self.last_action-action)))/100.0
+            else:
+                reward = 0
+
 
         self.last_action = action # update action record
-
         # add disturbances
         temp_state = list(self.obs_state)
         if self.tick >= self.disturb_starts:

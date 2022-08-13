@@ -44,14 +44,17 @@ if __name__ == "__main__":
     #                             disturb_starts=100, gaussian_std=0.3)
     env = ContinuousCartPole_V1()
     obs = env.reset()
-    num_steps = 500
+    num_steps = 600
     # init controller
-    K = generate_K_from_ARE(len_pole=1)
+    K = generate_K_from_ARE()
     # record data
     action_record = []
     obs_record = []
     for step in range(num_steps):
-        action = optimal_controller(K, obs)
+        control_obs = obs
+        if step >=200:
+            control_obs[0] += 1
+        action = optimal_controller(K, control_obs)
         obs, reward, done, info = env.step(action)
         # record data
         obs_record.append(obs)
@@ -62,5 +65,5 @@ if __name__ == "__main__":
     env.close()
     # plot data
     plot_action(action_record, num_steps, max_value=1.2)
-    plot_states(obs_record, num_steps)
+    plot_states(obs_record, num_steps,show_fig=True)
 

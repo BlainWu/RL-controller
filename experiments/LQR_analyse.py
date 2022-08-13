@@ -69,10 +69,11 @@ def generate_LQR_multi_poles_test(figures_dir, info = '',num_steps=500, max_mult
 if __name__ == "__main__":
     figures_dir = '../experiments/LQR_PoleLen/angle_m20_r30'
     logger_path = os.path.join(figures_dir, 'logger.json')
-    fig_save_path = os.path.join(os.path.dirname(figures_dir),'{}.png'.format(figures_dir.split('/')[-1]))
+    angle_margin_fig_path = os.path.join(os.path.dirname(figures_dir), '1_angle_{}.png'.format(figures_dir.split('/')[-1]))
+    position_margin_fig_path = os.path.join(os.path.dirname(figures_dir), '2_position_{}.png'.format(figures_dir.split('/')[-1]))
 
     #generate_LQR_multi_poles_test(figures_dir, max_multi=20, resolution=30)
-    margin = analyse_angle(logger_path, save_path=fig_save_path)
-    print(margin)
+    angle_margin = analyse_angle(logger_path, save_path=angle_margin_fig_path)
+    position_margin = analyse_position(logger_path,save_path=position_margin_fig_path)
 
 

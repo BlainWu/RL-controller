@@ -20,8 +20,8 @@ if __name__ == "__main__":
     #               save_path=os.path.join(os.path.dirname(figure_dir), 'anale_analysis_1046.png'))
 
     """Batch Test"""
-    model_path = '../models/REINFORCE_Penalise_Angle_Error_2'
+    model_path = '../models/REINFORCE_Angle_Position_Error_with_Control'
     figure_path = os.path.join('../experiments/', model_path.split('/')[-1])
     from utils.plot_utils import *
 
-    plot_all_models_angle_error(model_path, figure_path, max_multi=40, samplings=40)
+    plot_all_models_angle_position_margin(model_path, figure_path, max_multi=40, samplings=40)

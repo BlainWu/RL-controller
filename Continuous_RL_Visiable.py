@@ -6,7 +6,7 @@ from utils.plot_utils import plot_action,plot_states
 import time
 
 """Parameters"""
-model_path = './models/REINFORCE_Penalise_Angle_Error_1/con_REINFORCE_res21_iter23_reward48106.pth'
+model_path = './models/REINFORCE_Angle_Position_Error_with_Control_1/con_REINFORCE_res21_iter6_reward2828.pth'
 num_steps = 800
 resolution = 21  # IMPORTANT!!! Should be same as the value in the model
 actions = np.linspace(-1, 1, resolution)
@@ -34,6 +34,8 @@ while step_ct < num_steps:
     action_idx = DRL_model(obs).argmax().item()
     action = actions[action_idx]
     obs, reward, done, info = env.step(action)
+    if step_ct >= 200:
+        obs[0] += -2
     env.render(mode = "human")
     action_record.append(action)
     obs_record.append(obs)
@@ -43,4 +45,4 @@ env.close()
 
 # plot data
 plot_action(action_record, num_steps, max_value=1)
-plot_states(obs_record, num_steps)
+plot_states(obs_record, num_steps, show_fig=True)

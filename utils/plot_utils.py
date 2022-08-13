@@ -162,13 +162,92 @@ def analyse_angle(log_path, show_fig=True, save_path=None, intersection=True):
             props = dict(boxstyle='round', facecolor='wheat', alpha=0.5)
             ax.text(0.02, 0.15, info_box, transform=ax.transAxes, fontsize=9,
                     verticalalignment='top', bbox=props)
-
-
     if save_path is not None:
         plt.savefig(save_path)
         plt.close()
     if show_fig:
         max_angle_plt.show()
+
+    return stable_margin
+
+
+def analyse_position(log_path, show_fig=True, save_path=None, intersection=True):
+    stable_margin = 0.0
+    stable_position = 2.4
+    # load file
+    log_content = []
+    with open(log_path, 'r') as f:
+        log_content = json.load(f)
+    # iterate info
+    multi_series = []
+    max_position = []
+    for index, text in enumerate(log_content):
+        if index == 0:  # skip the info list
+            multiples = text['multiples']
+        else:
+            multi_series.append(text['Multiplier'])
+            all_position = np.hsplit(np.array(text['Obs_Record']), 4)[0].squeeze()
+            max_position.append(max(np.abs(all_position)))
+    # plot figure
+    max_position_plot = plt.figure()
+    plt.axes(xscale="log")
+    plt.plot(multi_series, max_position)
+    plt.ylim((0, 3))
+    ax = plt.gca()
+    plt.title('Maximum position at different pole lengths')
+    plt.xlabel('multiplier')
+    plt.ylabel('maximum position')
+    plt.axhline(y=stable_position, color='red', linestyle='--')
+
+    # draw the intersections
+    if intersection:
+        _x = []
+        _y = []
+        inter_points = []
+        for index in range(len(multi_series) - 1):
+            if max_position[index] >= stable_position > max_position[index + 1] or \
+                    max_position[index] <= stable_position < max_position[index + 1]:
+                _x.append(multi_series[index])
+                _y.append(max_position[index])
+                _x.append(multi_series[index + 1])
+                _y.append(max_position[index + 1])
+                inter_points.append(np.interp(stable_position, _y, _x))
+                _x = []
+                _y = []
+
+        _margin_list = []
+        inter_points = [round(i, 2) for i in inter_points]
+        len_inter = len(inter_points)
+        if len_inter >= 2:
+            # points pre-process
+            if len_inter == 2:
+                pass
+            else:
+                _range = []
+                for i in range(len_inter - 1):
+                    _margin_list.append(inter_points[i + 1] - inter_points[i])
+                    _margin_list = [round(i, 2) for i in _margin_list]
+                _max_index = _margin_list.index(max(_margin_list))
+                inter_points = inter_points[_max_index:_max_index + 2]
+            # draw points and infobox
+            for point in inter_points:
+                plt.plot(point, stable_position, 'ro')
+                plt.axvline(x=point, color='red', linestyle=':')
+            _min = min(inter_points)
+            _max = max(inter_points)
+            stable_margin = _max - _min
+            info_box = '\n'.join((r'$min=%.2f$' % (_min,),
+                                  r'$max=%.2f$' % (_max,),
+                                  r'$ranges=%.2f$' % (stable_margin,)))
+            props = dict(boxstyle='round', facecolor='wheat', alpha=0.5)
+            ax.text(0.02, 0.15, info_box, transform=ax.transAxes, fontsize=9,
+                    verticalalignment='top', bbox=props)
+
+    if save_path is not None:
+        plt.savefig(save_path)
+        plt.close()
+    if show_fig:
+        max_position_plot.show()
 
     return stable_margin
 
@@ -212,7 +291,6 @@ def generate_RL_multi_poles_test(model_path, figures_dir, num_steps=500, max_mul
             os.mkdir(os.path.dirname(result_dir))
             os.mkdir(result_dir)
 
-
     with open(os.path.join(result_dir, 'logger.json'), 'w') as file:
         for index, multi in enumerate(tqdm(multi_series)):
             # clear buffer
@@ -245,26 +323,39 @@ def generate_RL_multi_poles_test(model_path, figures_dir, num_steps=500, max_mul
         file.write(json_f)
 
 
-def plot_all_models_angle_error(models_path, figure_dir, max_multi=40, samplings=40):
+def plot_all_models_angle_position_margin(models_path, figure_dir, max_multi=40, samplings=40):
     model_lists = os.listdir(models_path)
     model_lists.remove('logger.json')
     if not os.path.exists(figure_dir):
         os.mkdir(figure_dir)
     logger_content = []
     margin_data = {}
-    with open(os.path.join(figure_dir, 'angle_range_record.json'), 'w') as file:
+    # mkdir
+    angle_analysis_dir = os.path.join(figure_dir,'1_angle_analysis')
+    position_analysis_dir = os.path.join(figure_dir, '2_position_analysis')
+    if not os.path.exists(angle_analysis_dir):
+        os.mkdir(angle_analysis_dir)
+    if not os.path.exists(position_analysis_dir):
+        os.mkdir(position_analysis_dir)
+
+    with open(os.path.join(figure_dir, 'angle_position_record.json'), 'a') as file:
         for model in tqdm(model_lists):
+            temp_margin = {}
             model_path = os.path.join(models_path, model)
-            print(model)
             imgs_dir = os.path.join(figure_dir, model.split('.')[0])
             if not os.path.exists(imgs_dir):
                 os.mkdir(imgs_dir)
+                generate_RL_multi_poles_test(model_path, imgs_dir, max_multi=max_multi, samplings=samplings)
+            else:
+                pass
 
-            generate_RL_multi_poles_test(model_path, imgs_dir, max_multi=max_multi, samplings=samplings)
-
-            margin = analyse_angle(log_path=os.path.join(imgs_dir, 'logger.json'),
-                          save_path=os.path.join(figure_dir, '{}.png'.format(model.split('.')[0])))
-            margin_data[model.split('.')[0]] = margin
+            angle_margin = analyse_angle(log_path=os.path.join(imgs_dir, 'logger.json'),
+                          save_path=os.path.join(angle_analysis_dir, 'Angle_{}.png'.format(model.split('.')[0])))
+            position_margin = analyse_position(log_path=os.path.join(imgs_dir, 'logger.json'),
+                                         save_path=os.path.join(position_analysis_dir, 'Position_{}.png'.format(model.split('.')[0])))
+            temp_margin['Angle_Margin'] = angle_margin
+            temp_margin['Position_Margin'] = position_margin
+            margin_data[model.split('.')[0]] = temp_margin
         logger_content.append(margin_data)
         json_f = json.dumps(logger_content, indent=3)
         file.write(json_f)

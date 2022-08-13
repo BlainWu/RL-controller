@@ -57,8 +57,8 @@ class REINFORCE:
 
 
 if __name__ == '__main__':
-    env = ContinuousCartPole_V2(penalise='Angle Error')
-    models_dir = '../models/REINFORCE_Penalise_Angle_Error_1' # make sure you change it !
+    env = ContinuousCartPole_V2(penalise='Angle Position Error with Control Signal')
+    models_dir = '../models/REINFORCE_Angle_Position_Error_with_Control_1' # make sure you change it !
     lr = 1e-3
     check_time = 100    # how often check the model to save
     iterations = 30     # number of round
@@ -84,7 +84,7 @@ if __name__ == '__main__':
     parameter_dict['resolution'] = resolution
     parameter_dict['hidden_dim'] = hidden_dim
     parameter_dict['gamma'] = gamma
-    parameter_dict['rewards'] = 'reward = 1 + 12/(0.1 + abs(theta*(180 / math.pi))); reward = 0'
+    parameter_dict['rewards'] = '(2 * 12/(12 + abs(theta*(180 / math.pi))) + 3*2.4/(2.4 + abs(x)) + 2.0/(2.0 + abs(self.last_action-action)))/100.0;reward = 0'
     log_content.append(parameter_dict)
     with open(logger_path, 'w') as file:
         json_file = json.dumps(log_content, indent=3)
