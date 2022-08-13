@@ -50,7 +50,8 @@ class ContinuousCartPole_V2(gym.Env):
         self.sensor_index = sensor_index
         self.gaussian_std = gaussian_std
         self.penalise = penalise
-        self.last_action = 0.0
+        self.last_action = 0.
+        self.control_signal_integral = 0.0
 
         # check the disturbances configuration
         assert self.disturb_type in [None, 'Gauss Noise', 'Sensor Failure'], \
@@ -172,6 +173,8 @@ class ContinuousCartPole_V2(gym.Env):
     def reset(self):
         self.state = self.np_random.uniform(low=-0.05, high=0.05, size=(4,))
         self.steps_beyond_done = None
+        self.last_action = 0.0
+        self.control_signal_integral = 0.0
         return np.array(self.state)
 
     def render(self, mode='human'):

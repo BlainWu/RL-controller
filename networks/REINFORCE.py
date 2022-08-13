@@ -58,13 +58,14 @@ class REINFORCE:
 
 if __name__ == '__main__':
     env = ContinuousCartPole_V2(penalise='Angle Position Error with Control Signal')
-    models_dir = '../models/REINFORCE_Angle_Position_Error_with_Control_1' # make sure you change it !
+    models_dir = '../models/REINFORCE_Angle_Position_Error_with_Control_1'  # make sure you change it !
     lr = 1e-3
-    check_time = 100    # how often check the model to save
-    iterations = 30     # number of round
+    check_time = 100  # how often check the model to save
+    iterations = 40  # number of round
     resolution = 21
     hidden_dim = 128
     gamma = 0.98
+    max_steps = 800
     device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
     if not os.path.exists(models_dir):
         os.mkdir(models_dir)
@@ -84,7 +85,8 @@ if __name__ == '__main__':
     parameter_dict['resolution'] = resolution
     parameter_dict['hidden_dim'] = hidden_dim
     parameter_dict['gamma'] = gamma
-    parameter_dict['rewards'] = '(2 * 12/(12 + abs(theta*(180 / math.pi))) + 3*2.4/(2.4 + abs(x)) + 2.0/(2.0 + abs(self.last_action-action)))/100.0;reward = 0'
+    parameter_dict[
+        'rewards'] = '(2 * 12/(12 + abs(theta*(180 / math.pi))) + 3*2.4/(2.4 + abs(x)) + 2.0/(2.0 + abs(self.last_action-action)))/100.0;reward = 0'
     log_content.append(parameter_dict)
     with open(logger_path, 'w') as file:
         json_file = json.dumps(log_content, indent=3)
@@ -104,8 +106,9 @@ if __name__ == '__main__':
                     'dones': []
                 }
                 state = env.reset()
+                _step_ct = 0
                 done = False
-                while not done:
+                while not done and _step_ct <= max_steps:
                     action_id, action = agent.take_action(state)
                     next_state, reward, done, info = env.step(action)
                     transition_dict['states'].append(state)
@@ -115,7 +118,8 @@ if __name__ == '__main__':
                     transition_dict['dones'].append(done)
                     state = next_state
                     episode_return += reward
-                return_list.append(episode_return) # used for plot
+                    _step_ct += 1
+                return_list.append(episode_return)  # used for plot
                 agent.update(transition_dict)
                 avg_return = np.mean(return_list[-10:])
                 if (i_episode + 1) % 10 == 0:
@@ -127,10 +131,10 @@ if __name__ == '__main__':
                     })
                 pbar.update(1)
 
-
             # save models
-            torch.save(agent.policy_net,os.path.join(models_dir,
-                            'con_REINFORCE_res{}_iter{}_reward{}.pth'.format(resolution, i, int(avg_return))))
+            torch.save(agent.policy_net, os.path.join(models_dir,
+                                                      'con_REINFORCE_res{}_iter{}_reward{}.pth'.format(resolution, i,
+                                                                                                       int(avg_return))))
             max_return = avg_return
 
     episodes_list = list(range(len(return_list)))

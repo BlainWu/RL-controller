@@ -20,7 +20,7 @@ if __name__ == "__main__":
     #               save_path=os.path.join(os.path.dirname(figure_dir), 'anale_analysis_1046.png'))
 
     """Batch Test"""
-    model_path = '../models/REINFORCE_Angle_Position_Error_with_Control'
+    model_path = '../models/REINFORCE_Angle_Position_Error_with_Control_1'
     figure_path = os.path.join('../experiments/', model_path.split('/')[-1])
     from utils.plot_utils import *
 
