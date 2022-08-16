@@ -27,7 +27,7 @@ class REINFORCE:
         self.gamma = gamma
         self.device = device
         self.optimizer = torch.optim.Adam(self.policy_net.parameters(), lr=lr)
-        self.actions = np.linspace(-1, 1, action_dim)
+        self.actions = np.linspace(-0.5, 0.5, action_dim)
 
     def take_action(self, state):
         state = torch.tensor([state], dtype=torch.float).to(self.device)
@@ -57,11 +57,12 @@ class REINFORCE:
 
 
 if __name__ == '__main__':
-    env = ContinuousCartPole_V2(penalise='Angle Position Error with Control Signal')
-    models_dir = '../models/REINFORCE_Angle_Position_Error_with_Control_1'  # make sure you change it !
+    env = ContinuousCartPole_V2(penalise='Integral All Signal')
+    models_dir = '../models/REINFORCE_Integral_All_1'  # make sure you change it !
+
     lr = 1e-3
     check_time = 100  # how often check the model to save
-    iterations = 40  # number of round
+    iterations = 45  # number of round
     resolution = 21
     hidden_dim = 128
     gamma = 0.98
@@ -75,6 +76,12 @@ if __name__ == '__main__':
     state_dim = env.observation_space.shape[0]
     action_dim = resolution
     agent = REINFORCE(state_dim, hidden_dim, action_dim, lr, gamma, device)
+    Resume = False
+    if Resume:
+        path_checkpoint = '../models/REINFORCE_Integral_Angle_Position_0/con_REINFORCE_res21_iter39_reward95.pth'
+        check_point = torch.load(path_checkpoint, map_location=torch.device('cuda'))
+        agent.policy_net.load_state_dict(check_point.state_dict())
+        agent.policy_net.train()
     # logger
     logger_path = os.path.join(models_dir, 'logger.json')
     log_content = []
@@ -85,8 +92,10 @@ if __name__ == '__main__':
     parameter_dict['resolution'] = resolution
     parameter_dict['hidden_dim'] = hidden_dim
     parameter_dict['gamma'] = gamma
-    parameter_dict[
-        'rewards'] = '(2 * 12/(12 + abs(theta*(180 / math.pi))) + 3*2.4/(2.4 + abs(x)) + 2.0/(2.0 + abs(self.last_action-action)))/100.0;reward = 0'
+    parameter_dict['rewards'] = 'reward = 12/(12 + abs(theta*(180 / math.pi))) + 2 * 2.4/(2.4 + abs(x)) + \
+                          2 * 2.4 / (2.4 + self.position_integral) + 12 / (12 + self.angle_integral) + \
+                         20 / (20 + self.omega_integral) + 20 / (20 + self.velocity_integral);rewards=-4;'
+    parameter_dict['info'] = 'action = -0.5~0.5'
     log_content.append(parameter_dict)
     with open(logger_path, 'w') as file:
         json_file = json.dumps(log_content, indent=3)
@@ -142,6 +151,7 @@ if __name__ == '__main__':
     plt.xlabel('Episodes')
     plt.ylabel('Returns')
     plt.title('REINFORCE on Continuous CarPole')
+    plt.savefig(os.path.join(models_dir, 'return.png'))
     plt.show()
 
     mv_return = rl_utils.moving_average(return_list, 9)
@@ -149,4 +159,5 @@ if __name__ == '__main__':
     plt.xlabel('Episodes')
     plt.ylabel('Returns')
     plt.title('REINFORCE on Continuous CarPole')
+    plt.savefig(os.path.join(models_dir, 'mv_return.png'))
     plt.show()

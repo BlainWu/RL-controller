@@ -51,7 +51,11 @@ class ContinuousCartPole_V2(gym.Env):
         self.gaussian_std = gaussian_std
         self.penalise = penalise
         self.last_action = 0.
-        self.control_signal_integral = 0.0
+        self.action_integral = 0.0
+        self.angle_integral = 0.0
+        self.position_integral = 0.0
+        self.omega_integral = 0.0
+        self.velocity_integral = 0.0
 
         # check the disturbances configuration
         assert self.disturb_type in [None, 'Gauss Noise', 'Sensor Failure'], \
@@ -61,7 +65,8 @@ class ContinuousCartPole_V2(gym.Env):
 
         # check the rewards configuration
         assert self.penalise in [None, 'Absolute Control Signal', 'Angle Error', 'Control Signal Increments',
-                                 'Angle Position Error','Angle Position Error with Control Signal'], \
+                                 'Angle Position Error','Angle Position Error with Control Signal',
+                                 'Integral Angle Position', 'Integral All Signal'], \
             "The following types of penalise are available: 'Control Signal', 'Angle Error'"
 
         # Angle at which to fail the episode
@@ -123,6 +128,13 @@ class ContinuousCartPole_V2(gym.Env):
             or theta > self.theta_threshold_radians
         done = bool(done)
 
+        # Integral terms
+        self.action_integral += abs(action)  # Integrate Actions
+        self.angle_integral += abs(theta*(180 / math.pi))
+        self.position_integral += abs(x)
+        self.omega_integral += abs(x_dot)
+        self.velocity_integral += abs(theta_dot)
+
         if self.penalise is None:
             if not done:
                 reward = 1.0
@@ -150,10 +162,30 @@ class ContinuousCartPole_V2(gym.Env):
                 reward = -3
         elif self.penalise == 'Angle Position Error with Control Signal':
             if not done:
-                reward = (2 * 12/(12 + abs(theta*(180 / math.pi))) + 3*2.4/(2.4 + abs(x)) + 2.0/(2.0 + abs(self.last_action-action)))/100.0
+                reward = (-2 + 12/(12 + abs(theta*(180 / math.pi))) + 2.4/(2.4 + abs(x)) +
+                          10/(10+self.action_integral) + 2.0/(2.0 + abs(self.last_action-action)))/100.0
+            else:
+                reward = 0
+        elif self.penalise == 'Integral Angle Position':
+            if not done:
+                reward = 2.4 / (2.4 + self.position_integral) + 12 / (12 + self.angle_integral)
             else:
                 reward = 0
 
+        elif self.penalise == 'Integral All Signal':
+            if not done:
+                reward = 2.4 / (2.4 + self.position_integral) + 12 / (12 + self.angle_integral) +\
+                         20 / (20 + self.omega_integral) + 20 / (20 + self.velocity_integral)
+            else:
+                reward = -4
+
+        elif self.penalise == 'Integral All Signal':
+            if not done:
+                reward = 12/(12 + abs(theta*(180 / math.pi))) + 2 * 2.4/(2.4 + abs(x)) + \
+                          2 * 2.4 / (2.4 + self.position_integral) + 12 / (12 + self.angle_integral) + \
+                         20 / (20 + self.omega_integral) + 20 / (20 + self.velocity_integral)
+            else:
+                reward = -4
 
         self.last_action = action # update action record
         # add disturbances
@@ -174,7 +206,11 @@ class ContinuousCartPole_V2(gym.Env):
         self.state = self.np_random.uniform(low=-0.05, high=0.05, size=(4,))
         self.steps_beyond_done = None
         self.last_action = 0.0
-        self.control_signal_integral = 0.0
+        self.action_integral = 0.0
+        self.angle_integral = 0.0
+        self.position_integral = 0.0
+        self.omega_integral = 0.0
+        self.velocity_integral = 0.0
         return np.array(self.state)
 
     def render(self, mode='human'):

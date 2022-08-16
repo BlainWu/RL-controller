@@ -1,3 +1,5 @@
+import random
+
 import numpy as np
 import time
 from envs.continuous_cartpole_v1 import ContinuousCartPole_V1
@@ -53,17 +55,17 @@ if __name__ == "__main__":
     for step in range(num_steps):
         control_obs = obs
         if step >=200:
-            control_obs[0] += 1
+            control_obs[3] = np.random.normal(0, 0.01)
         action = optimal_controller(K, control_obs)
         obs, reward, done, info = env.step(action)
         # record data
-        obs_record.append(obs)
+        obs_record.append(control_obs)
         action_record.append(action)
         # UI
         env.render(mode='human')
         time.sleep(0.001)
     env.close()
     # plot data
-    plot_action(action_record, num_steps, max_value=1.2)
+    plot_action(action_record, num_steps, max_value=1.2,show_fig=True)
     plot_states(obs_record, num_steps,show_fig=True)
 

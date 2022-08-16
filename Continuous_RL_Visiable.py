@@ -6,10 +6,15 @@ from utils.plot_utils import plot_action,plot_states
 import time
 
 """Parameters"""
-model_path = './models/REINFORCE_Angle_Position_Error_with_Control_1/con_REINFORCE_res21_iter6_reward2828.pth'
-num_steps = 800
+# model_path = './models/REINFORCE_Angle_Position_Error_1/con_REINFORCE_res21_iter24_reward4080.pth'
+# model_path = './models/REINFORCE_Integral_All_0/con_REINFORCE_res21_iter12_reward304.pth'
+# model_path = './models/REINFORCE_Integral_All_1/con_REINFORCE_res21_iter17_reward470.pth' # action[-0.5, 0.5]
+model_path = './models/REINFORCE_Integral_All_1/con_REINFORCE_res21_iter33_reward489.pth' # action[-0.5, 0.5]
+
+num_steps = 500
 resolution = 21  # IMPORTANT!!! Should be same as the value in the model
-actions = np.linspace(-1, 1, resolution)
+action_range = 0.5
+actions = np.linspace(-action_range, action_range, resolution)
 
 """ Init """
 env = ContinuousCartPole_V1()
@@ -34,8 +39,9 @@ while step_ct < num_steps:
     action_idx = DRL_model(obs).argmax().item()
     action = actions[action_idx]
     obs, reward, done, info = env.step(action)
-    if step_ct >= 200:
-        obs[0] += -2
+    # if step_ct >= 200:
+    #     obs[2] = np.random.normal(0, 0.01)
+        # obs[0] += -2
     env.render(mode = "human")
     action_record.append(action)
     obs_record.append(obs)

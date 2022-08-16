@@ -6,8 +6,6 @@ import os
 import torch
 from tqdm import tqdm
 from envs.continuous_cartpole_v1 import ContinuousCartPole_V1
-from shapely.geometry import LineString
-
 
 def arc_to_degree(theta):
     return [i*(180 / math.pi) for i in theta]
@@ -36,6 +34,7 @@ def plot_states(data, steps, grid=False, threshold=True,
 
     plt.subplot(222)
     plt.title('Velocity of Car')
+    #plt.ylim((-0.5, 0.5))
     plt.grid(grid)
     plt.ylabel('m/s')
     plt.plot(axis, x_dot)
@@ -55,6 +54,7 @@ def plot_states(data, steps, grid=False, threshold=True,
     plt.subplot(224)
     plt.title('Angular Velocity of Pole')
     plt.grid(grid)
+    #plt.ylim((-0.2, 0.2))
     plt.ylabel('rad/s')
     plt.plot(axis, theta_dot)
 
@@ -255,7 +255,7 @@ def analyse_position(log_path, show_fig=True, save_path=None, intersection=True)
 def generate_multi_series(max_multi=20, resolution=20, precision=3):
     temp_a = np.linspace(1, max_multi, resolution).tolist()
     temp_b = np.linspace(1 / 15, 1, 25).tolist()
-    multi_series = temp_b[0:resolution - 1] + temp_a
+    multi_series = temp_b[0:len(temp_b)-1] + temp_a
     multi_series = np.round(multi_series, precision)
     return multi_series
 
@@ -348,7 +348,6 @@ def plot_all_models_angle_position_margin(models_path, figure_dir, max_multi=40,
                 generate_RL_multi_poles_test(model_path, imgs_dir, max_multi=max_multi, samplings=samplings)
             else:
                 pass
-
             angle_margin = analyse_angle(log_path=os.path.join(imgs_dir, 'logger.json'),
                           save_path=os.path.join(angle_analysis_dir, 'Angle_{}.png'.format(model.split('.')[0])))
             position_margin = analyse_position(log_path=os.path.join(imgs_dir, 'logger.json'),
@@ -359,3 +358,71 @@ def plot_all_models_angle_position_margin(models_path, figure_dir, max_multi=40,
         logger_content.append(margin_data)
         json_f = json.dumps(logger_content, indent=3)
         file.write(json_f)
+
+
+def analyse_shift(figure_dir):
+    # plot data
+    max_angle_shift = []
+    max_position_shift = []
+    x_axis = []
+    fig_path_angle = os.path.join(figure_dir, 'angle_shift.png')
+    fig_path_position = os.path.join(figure_dir, 'position_shift.png')
+    if os.path.exists(fig_path_position):
+        os.remove(fig_path_position)
+    if os.path.exists(fig_path_angle):
+        os.remove(fig_path_angle)
+
+    figure_dir_list = os.listdir(figure_dir)
+    # filter
+    figure_dir_list.remove('1_angle_analysis')
+    figure_dir_list.remove('2_position_analysis')
+    figure_dir_list.remove('angle_position_record.json')
+    figure_dir_list.sort(key = lambda i:int(i.split('_')[-2].split('iter')[1]))
+    # inter
+    for _figure in tqdm(figure_dir_list):
+        logger_path = os.path.join(figure_dir, os.path.join(_figure, 'logger.json'))
+        with open(logger_path, 'r') as f:
+            log_content = json.load(f)
+        temp_angle = []
+        temp_position = []
+        for ind, record in enumerate(log_content):
+            if ind == 0:
+                continue
+            else:
+                if record["Multiplier"] == 1.0:
+                    all_position = np.hsplit(np.array(record['Obs_Record']), 4)[0].squeeze()
+                    all_angle = np.hsplit(np.array(record['Obs_Record']), 4)[2].squeeze()
+                    temp_position.append(max(np.abs(all_position)))
+                    temp_angle.append(max(np.abs(all_angle)))
+                else:
+                    continue
+        max_angle_shift.append(max(temp_angle) *(180 / math.pi))
+        max_position_shift.append(max(temp_position))
+        assert len(max_angle_shift) == len(max_position_shift), \
+            'the size of angle shift should be same as position shift'
+        x_axis = [i+1 for i in range(len(max_angle_shift))]
+
+    print(max_angle_shift)
+    print(max_position_shift)
+    plt.figure()
+    plt.plot(x_axis, max_angle_shift)
+    plt.title('Max angle shift of all models')
+    plt.xlabel('iter')
+    plt.ylabel('degree')
+    plt.ylim((0, 12))
+    plt.grid(True)
+
+    plt.savefig(fig_path_angle)
+    plt.show()
+    plt.close()
+
+    plt.figure()
+    plt.plot(x_axis, max_position_shift)
+    plt.title('Max position shift of all models')
+    plt.xlabel('iter')
+    plt.ylabel('m')
+    plt.ylim((0, 2.4))
+    plt.grid(True)
+    plt.savefig(fig_path_position)
+    plt.show()
+    plt.close()

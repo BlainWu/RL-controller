@@ -5,6 +5,7 @@ import matplotlib.pyplot as plt
 import json
 from utils.plot_utils import analyse_angle
 from utils.plot_utils import generate_RL_multi_poles_test
+from utils.plot_utils import analyse_shift
 from networks.REINFORCE import PolicyNet
 
 
@@ -20,8 +21,9 @@ if __name__ == "__main__":
     #               save_path=os.path.join(os.path.dirname(figure_dir), 'anale_analysis_1046.png'))
 
     """Batch Test"""
-    model_path = '../models/REINFORCE_Angle_Position_Error_with_Control_1'
+    model_path = '../models/REINFORCE_Integral_All_0'
     figure_path = os.path.join('../experiments/', model_path.split('/')[-1])
     from utils.plot_utils import *
 
-    plot_all_models_angle_position_margin(model_path, figure_path, max_multi=40, samplings=40)
+    #plot_all_models_angle_position_margin(model_path, figure_path, max_multi=40, samplings=40)
+    analyse_shift(figure_path)
