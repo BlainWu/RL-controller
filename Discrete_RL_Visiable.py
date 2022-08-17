@@ -1,16 +1,22 @@
 import torch
 import numpy as np
 from envs.continuous_cartpole_v1 import ContinuousCartPole_V1
-from networks.DDPG import ActorNet
-from networks.DDPG import ActorNet as PolicyNet
+from networks.REINFORCE import PolicyNet
 from utils.plot_utils import plot_action,plot_states
 import time
 
 """Parameters"""
-model_path = './models/DDPG_Angle_Position_Error_with_Control_0/DDPG_iter17_reward833.pth'
-# model_path = './models/DDPG_Angle_Position_Error_with_Control_0/DDPG_iter9_reward624.pth'
+# model_path = './models/REINFORCE_Angle_Position_Error_1/con_REINFORCE_res21_iter24_reward4080.pth'
+# model_path = './models/REINFORCE_Integral_All_0/con_REINFORCE_res21_iter12_reward304.pth'
+# model_path = './models/REINFORCE_Integral_All_1/con_REINFORCE_res21_iter17_reward470.pth' # action[-0.5, 0.5]
+# model_path = './models/REINFORCE_Angle_Position_Error_5/con_REINFORCE_res21_iter37_reward364.pth' # action[-0.5, 0.5]
+model_path = './models/Actor_Critics_Angle_Position_Error/ActorCritic_res21_iter28_reward737.pth' # action[-0.5, 0.5]
+
 
 num_steps = 500
+resolution = 21  # IMPORTANT!!! Should be same as the value in the model
+action_range = 0.5
+actions = np.linspace(-action_range, action_range, resolution)
 
 """ Init """
 env = ContinuousCartPole_V1()
@@ -32,11 +38,12 @@ obs_record = []
 
 while step_ct < num_steps:
     obs = torch.tensor([obs], dtype=torch.float).to(device)
-    action = DRL_model(obs).item()
+    action_idx = DRL_model(obs).argmax().item()
+    action = actions[action_idx]
     obs, reward, done, info = env.step(action)
     # if step_ct >= 200:
-    #     obs[2] = np.random.normal(0, 0.01)
-        # obs[0] += -2
+    #     # obs[2] = np.random.normal(0, 0.01)
+    #     obs[0] += -2
     env.render(mode = "human")
     action_record.append(action)
     obs_record.append(obs)

@@ -55,7 +55,7 @@ if __name__ == "__main__":
     for step in range(num_steps):
         control_obs = obs
         if step >=200:
-            control_obs[3] = np.random.normal(0, 0.01)
+            control_obs[2] += np.random.normal(0, 0.01)
         action = optimal_controller(K, control_obs)
         obs, reward, done, info = env.step(action)
         # record data

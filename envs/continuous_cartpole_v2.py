@@ -116,6 +116,7 @@ class ContinuousCartPole_V2(gym.Env):
         # Cast action to float to strip np trappings
         action = np.clip(action, self.min_action, self.max_action)  # ensure the action in a reasonable range
         force = self.force_mag * float(action)
+        action = float(action)
 
         self.state = self.stepPhysics(force)
         self.obs_state = self.state
@@ -157,13 +158,12 @@ class ContinuousCartPole_V2(gym.Env):
                 reward = 0.0
         elif self.penalise == 'Angle Position Error':
             if not done:
-                reward = 1 + 12/(12 + abs(theta*(180 / math.pi))) + abs(2.4/(2.4 + abs(x)))
+                reward = 12/(12 + abs(theta*(180 / math.pi))) + 2.4/(2.4 + abs(x)) - 1.0
             else:
-                reward = -3
+                reward = 0
         elif self.penalise == 'Angle Position Error with Control Signal':
             if not done:
-                reward = (-2 + 12/(12 + abs(theta*(180 / math.pi))) + 2.4/(2.4 + abs(x)) +
-                          10/(10+self.action_integral) + 2.0/(2.0 + abs(self.last_action-action)))/100.0
+                reward = 12/(12 + abs(theta*(180 / math.pi))) + 2.4/(2.4 + abs(x)) + 0.25 * 1/(1 + abs(action)) - 1.5
             else:
                 reward = 0
         elif self.penalise == 'Integral Angle Position':
@@ -171,13 +171,6 @@ class ContinuousCartPole_V2(gym.Env):
                 reward = 2.4 / (2.4 + self.position_integral) + 12 / (12 + self.angle_integral)
             else:
                 reward = 0
-
-        elif self.penalise == 'Integral All Signal':
-            if not done:
-                reward = 2.4 / (2.4 + self.position_integral) + 12 / (12 + self.angle_integral) +\
-                         20 / (20 + self.omega_integral) + 20 / (20 + self.velocity_integral)
-            else:
-                reward = -4
 
         elif self.penalise == 'Integral All Signal':
             if not done:

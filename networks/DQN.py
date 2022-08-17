@@ -5,11 +5,21 @@ import torch
 import torch.nn.functional as F
 import matplotlib.pyplot as plt
 import utils.rl_utils as rl_utils
-from temp.discrete_DQN import Qnet
 from envs.continuous_cartpole_v1 import ContinuousCartPole_V1
 from envs.continuous_cartpole_v2 import ContinuousCartPole_V2
 import os
 import json
+
+class Qnet(torch.nn.Module):
+    def __init__(self, state_dim, hidden_dim, action_dim):
+        super(Qnet, self).__init__()
+        self.fc1 = torch.nn.Linear(state_dim, hidden_dim)
+        self.fc2 = torch.nn.Linear(hidden_dim, action_dim)
+
+    def forward(self, x):
+        x = F.relu(self.fc1(x))
+        return self.fc2(x)
+
 
 class Continuous_DQN:
 
@@ -42,10 +52,10 @@ class Continuous_DQN:
 
     def update(self, transition_dict):
         states = torch.tensor(transition_dict['states'], dtype=torch.float).to(self.device)
-        action_idx = torch.tensor(transition_dict['actions']).view(-1,1).to(self.device)
-        rewards = torch.tensor(transition_dict['rewards'], dtype=torch.float).view(-1,1).to(self.device)
+        action_idx = torch.tensor(transition_dict['actions']).view(-1, 1).to(self.device)
+        rewards = torch.tensor(transition_dict['rewards'], dtype=torch.float).view(-1, 1).to(self.device)
         next_states = torch.tensor(transition_dict['next_states'], dtype=torch.float).to(self.device)
-        dones = torch.tensor(transition_dict['dones'], dtype=torch.float).view(-1,1).to(self.device)
+        dones = torch.tensor(transition_dict['dones'], dtype=torch.float).view(-1, 1).to(self.device)
         q_values = self.q_net(states).gather(1, action_idx)
         """
         output of nn:
