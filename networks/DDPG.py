@@ -22,6 +22,18 @@ class ActorNet(torch.nn.Module):
         return torch.tanh(self.fc2(x)) * self.max_action
 
 
+class PolicyNet(torch.nn.Module):
+    def __init__(self, state_dim, hidden_dim, action_dim, max_action):
+        super(ActorNet, self).__init__()
+        self.fc1 = torch.nn.Linear(state_dim, hidden_dim)
+        self.fc2 = torch.nn.Linear(hidden_dim, action_dim)
+        self.max_action = max_action
+
+    def forward(self, x):
+        x = F.relu(self.fc1(x))
+        return torch.tanh(self.fc2(x)) * self.max_action
+
+
 class QValueNet(torch.nn.Module):
     def __init__(self, state_dim, action_dim, hidden_dim):
         super(QValueNet, self).__init__()
@@ -89,8 +101,8 @@ class DDPG:
         self.soft_update(self.critic, self.target_critic)  # 软更新价值网络
 
 if __name__ == '__main__':
-    env = ContinuousCartPole_V2(penalise='Angle Position Error with Control Signal')
-    models_dir = '../models/DDPG_Angle_Position_Error_with_Control_1'  # make sure you change it !
+    env = ContinuousCartPole_V2(penalise='Angle Position Error', disturb_type='Gauss Noise', sensor_index=[0,1,2,3], gaussian_std=0.001)
+    models_dir = '../models/DDPG_Angle_Position_Error_with_noise_0'  # make sure you change it !
     if not os.path.exists(models_dir):
         os.mkdir(models_dir)
     # networks parameters
@@ -114,13 +126,13 @@ if __name__ == '__main__':
     device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
 
     # seeds set
-    env.seed(0)
-    torch.manual_seed(0)
+    # env.seed(0)
+    # torch.manual_seed(0)
     agent = DDPG(state_dim, hidden_dim, action_dim, max_action, noise_std, actor_lr, critic_lr, tau, gamma, device)
     # whether use pre-trained model
-    Resume = False
+    Resume = True
     if Resume:
-        path_checkpoint = '../models/REINFORCE_Angle_Position_Error_2/con_REINFORCE_res21_iter44_reward2007.pth'
+        path_checkpoint = '../models/DDPG_Angle_Position_Error/DDPG_iter13_reward769.pth'
         check_point = torch.load(path_checkpoint, map_location=torch.device('cuda'))
         agent.actor.load_state_dict(check_point.state_dict())
         agent.actor.train()
@@ -138,7 +150,7 @@ if __name__ == '__main__':
     parameter_dict['tau'] = tau
     parameter_dict['hidden_dim'] = hidden_dim
     parameter_dict['gamma'] = gamma
-    parameter_dict['rewards'] = '12/(12 + abs(theta*(180 / math.pi))) + 2.4/(2.4 + abs(x)) + 0.25 * 1 / 1 + abs(action) - 1.5; reward = 0'
+    parameter_dict['rewards'] = '6/(6 + abs(theta*(180 / math.pi))) + 1.2/(1.2 + abs(x)) - 1.0; reward = 0'
     parameter_dict['info'] = ''
     log_content.append(parameter_dict)
     with open(logger_path, 'w') as file:

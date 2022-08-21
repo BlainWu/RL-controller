@@ -7,13 +7,15 @@ from utils.plot_utils import plot_action,plot_states
 import time
 
 """Parameters"""
-model_path = './models/DDPG_Angle_Position_Error_with_Control_0/DDPG_iter17_reward833.pth'
-# model_path = './models/DDPG_Angle_Position_Error_with_Control_0/DDPG_iter9_reward624.pth'
+model_path = './models/DDPG_Angle_Position_Error_1/DDPG_iter1_reward439.pth'
+# model_path = './models/DDPG_Angle_Position_Error/DDPG_iter13_reward769.pth'
+# model_path = './models/DDPG_Angle_Position_Error_with_Control_2/DDPG_iter0_reward360.pth'
+# model_path = './models/DDPG_Angle_Position_Error_with_noise_0/DDPG_iter2_reward635.pth'
 
 num_steps = 500
 
 """ Init """
-env = ContinuousCartPole_V1()
+env = ContinuousCartPole_V1(length=0.5)
 # env = ContinuousCartPoleEnv(disturb_type='Gauss Noise', sensor_index=[0, 1, 2, 3],
 #                                 disturb_starts=100, gaussian_std=0.3)
 obs = env.reset()
@@ -34,10 +36,10 @@ while step_ct < num_steps:
     obs = torch.tensor([obs], dtype=torch.float).to(device)
     action = DRL_model(obs).item()
     obs, reward, done, info = env.step(action)
-    # if step_ct >= 200:
-    #     obs[2] = np.random.normal(0, 0.01)
-        # obs[0] += -2
-    env.render(mode = "human")
+    if step_ct >= 200:
+        # obs[2] = 0
+        obs[0] += -1
+    env.render(mode="human")
     action_record.append(action)
     obs_record.append(obs)
     time.sleep(0.001)

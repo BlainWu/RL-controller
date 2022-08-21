@@ -24,7 +24,7 @@ class ContinuousCartPole_V2(gym.Env):
     }
 
     def __init__(self, mass_cart=1.0, mass_pole=0.1, length=0.5,
-                 disturb_type=None, disturb_starts=None, sensor_index=[0, 1, 2, 3], gaussian_std=0.1,
+                 disturb_type=None, disturb_starts=None, sensor_index=[0, 1, 2, 3], gaussian_std=0.01,
                  random_len=None, penalise=None):
         """
         :param disturb_type: chose the type of disturbances, 'Gauss Noise', 'Sensor Failure'
@@ -158,12 +158,12 @@ class ContinuousCartPole_V2(gym.Env):
                 reward = 0.0
         elif self.penalise == 'Angle Position Error':
             if not done:
-                reward = 12/(12 + abs(theta*(180 / math.pi))) + 2.4/(2.4 + abs(x)) - 1.0
+                reward = 6/(6 + abs(theta*(180 / math.pi))) + 1.2/(1.2 + abs(x)) - 1.0
             else:
                 reward = 0
         elif self.penalise == 'Angle Position Error with Control Signal':
             if not done:
-                reward = 12/(12 + abs(theta*(180 / math.pi))) + 2.4/(2.4 + abs(x)) + 0.25 * 1/(1 + abs(action)) - 1.5
+                reward = 12/(12 + abs(theta*(180 / math.pi))) + 2.4/(2.4 + abs(x)) + 0.25 * 2/(2 + abs(self.last_action-action)) - 1.75
             else:
                 reward = 0
         elif self.penalise == 'Integral Angle Position':
