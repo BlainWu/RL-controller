@@ -260,7 +260,7 @@ def generate_multi_series(max_multi=20, resolution=20, precision=3):
     return multi_series
 
 
-def generate_RL_multi_poles_test(model_path, figures_dir, num_steps=500, max_multi=20, samplings=30):
+def generate_RL_multi_poles_test(model_path, figures_dir, num_steps=500, max_multi=20, samplings=30, action_type=""):
     """Parameters"""
     resolution = 21  # IMPORTANT!!! Should be same as the value in the model
     actions = np.linspace(-1, 1, resolution)
@@ -290,7 +290,7 @@ def generate_RL_multi_poles_test(model_path, figures_dir, num_steps=500, max_mul
         except FileNotFoundError:
             os.mkdir(os.path.dirname(result_dir))
             os.mkdir(result_dir)
-
+    assert action_type in ['Discrete', 'Continuous'], "The type of test only can be 'Discrete' and 'Continuous'"
     with open(os.path.join(result_dir, 'logger.json'), 'w') as file:
         for index, multi in enumerate(tqdm(multi_series)):
             # clear buffer
@@ -302,12 +302,20 @@ def generate_RL_multi_poles_test(model_path, figures_dir, num_steps=500, max_mul
             obs = env.reset()
             for step in range(num_steps):
                 obs = torch.tensor([obs], dtype=torch.float).to(device)
-                action_idx = DRL_model(obs).argmax().item()
-                action = actions[action_idx]
-                obs, reward, done, info = env.step(action)
-                # record data
-                obs_record.append(obs.tolist())
-                action_record.append(action.tolist())
+                if action_type == "Discrete":
+                    action_idx = DRL_model(obs).argmax().item()
+                    action = actions[action_idx]
+                    obs, reward, done, info = env.step(action)
+                    # record data
+                    obs_record.append(obs.tolist())
+                    action_record.append(action.tolist())
+                elif action_type == "Continuous":
+                    action = DRL_model(obs).item()
+                    obs, reward, done, info = env.step(action)
+                    # record data
+                    obs_record.append(obs.tolist())
+                    action_record.append(action)
+
             info['Multiplier'] = multi
             info['Obs_Record'] = obs_record
             info['Action_Record'] = action_record
@@ -323,7 +331,7 @@ def generate_RL_multi_poles_test(model_path, figures_dir, num_steps=500, max_mul
         file.write(json_f)
 
 
-def plot_all_models_angle_position_margin(models_path, figure_dir, max_multi=40, samplings=40):
+def plot_all_models_angle_position_margin(models_path, figure_dir, max_multi=40, samplings=40, action_type=''):
     model_lists = os.listdir(models_path)
     model_lists.remove('logger.json')
     if not os.path.exists(figure_dir):
@@ -345,7 +353,7 @@ def plot_all_models_angle_position_margin(models_path, figure_dir, max_multi=40,
             imgs_dir = os.path.join(figure_dir, model.split('.')[0])
             if not os.path.exists(imgs_dir):
                 os.mkdir(imgs_dir)
-                generate_RL_multi_poles_test(model_path, imgs_dir, max_multi=max_multi, samplings=samplings)
+                generate_RL_multi_poles_test(model_path, imgs_dir, max_multi=max_multi, samplings=samplings, action_type=action_type)
             else:
                 pass
             angle_margin = analyse_angle(log_path=os.path.join(imgs_dir, 'logger.json'),

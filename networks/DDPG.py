@@ -1,6 +1,7 @@
 import os.path
 import utils.rl_utils as rl_utils
 from envs.continuous_cartpole_v2 import ContinuousCartPole_V2
+from envs.continuous_cartpole_v3 import ContinuousCartPole_V3
 from utils.rl_utils import ReplayBuffer
 import torch
 import torch.nn.functional as F
@@ -101,8 +102,8 @@ class DDPG:
         self.soft_update(self.critic, self.target_critic)  # 软更新价值网络
 
 if __name__ == '__main__':
-    env = ContinuousCartPole_V2(penalise='Angle Position Error', disturb_type='Gauss Noise', sensor_index=[0,1,2,3], gaussian_std=0.001)
-    models_dir = '../models/DDPG_Angle_Position_Error_with_noise_0'  # make sure you change it !
+    env = ContinuousCartPole_V3(penalise='Angle Position Error with Control Signal', random_position=1.5)
+    models_dir = '../models/DDPG_Angle_Position_Error_with_Control_rand_position_0'  # make sure you change it !
     if not os.path.exists(models_dir):
         os.mkdir(models_dir)
     # networks parameters
@@ -119,12 +120,12 @@ if __name__ == '__main__':
     batch_size = 64
     noise_std = 0.01
     # training parameters
-    iterations = 30  # number of round
+    iterations = 40  # number of round
     check_time = 100  # how often check the model to save
     max_steps = 800
     replay_buffer = rl_utils.ReplayBuffer(buffer_size)
     device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
-
+    random_position = 2
     # seeds set
     # env.seed(0)
     # torch.manual_seed(0)
@@ -132,7 +133,7 @@ if __name__ == '__main__':
     # whether use pre-trained model
     Resume = True
     if Resume:
-        path_checkpoint = '../models/DDPG_Angle_Position_Error/DDPG_iter13_reward769.pth'
+        path_checkpoint = '../models/DDPG_Angle_Position_Error_with_rand_position_0/DDPG_iter7_reward586.pth'
         check_point = torch.load(path_checkpoint, map_location=torch.device('cuda'))
         agent.actor.load_state_dict(check_point.state_dict())
         agent.actor.train()
@@ -150,8 +151,9 @@ if __name__ == '__main__':
     parameter_dict['tau'] = tau
     parameter_dict['hidden_dim'] = hidden_dim
     parameter_dict['gamma'] = gamma
-    parameter_dict['rewards'] = '6/(6 + abs(theta*(180 / math.pi))) + 1.2/(1.2 + abs(x)) - 1.0; reward = 0'
-    parameter_dict['info'] = ''
+    parameter_dict['random_position'] = random_position
+    parameter_dict['rewards'] = '6/(6 + abs(theta*(180 / math.pi))) + 1.2/(1.2 + abs(x)) - 1.5 + 1/(1+abs(action))'
+    parameter_dict['info'] = 'random position + control signal'
     log_content.append(parameter_dict)
     with open(logger_path, 'w') as file:
         json_file = json.dumps(log_content, indent=3)

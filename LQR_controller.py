@@ -24,7 +24,7 @@ def generate_K_from_ARE(weight_R=1, weight_Q=4, m_cart=1, m_pole=0.1,
 
     # cost function
     R = np.eye(weight_R, dtype=int)
-    Q = np.eye(weight_Q, dtype=int)
+    Q = 10 * np.eye(weight_Q, dtype=int)
 
     # solve Riccati Equation
     P = linalg.solve_continuous_are(A, B, Q, R)
@@ -55,7 +55,8 @@ if __name__ == "__main__":
     for step in range(num_steps):
         control_obs = obs
         if step >=200:
-            control_obs[2] += np.random.normal(0, 0.1)
+            # control_obs[2] += np.random.normal(0, 0.1)
+            control_obs[0] += -2
         action = optimal_controller(K, control_obs)
         obs, reward, done, info = env.step(action)
         # record data

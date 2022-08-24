@@ -5,7 +5,7 @@ import time
 from envs.continuous_cartpole_v1 import ContinuousCartPole_V1
 from utils.plot_utils import *
 from scipy import linalg
-from Optimal_Controller import generate_K_from_ARE, optimal_controller
+from LQR_controller import generate_K_from_ARE, optimal_controller
 
 def generate_LQR_multi_poles_test(figures_dir, info = '',num_steps=500, max_multi=20, resolution=20):
     """Parameters"""
