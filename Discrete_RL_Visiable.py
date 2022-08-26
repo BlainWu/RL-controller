@@ -11,9 +11,9 @@ import time
 # model_path = './models/REINFORCE_Integral_All_1/con_REINFORCE_res21_iter17_reward470.pth' # action[-0.5, 0.5]
 model_path = './models/REINFORCE_Angle_Position_Error_5/con_REINFORCE_res21_iter37_reward364.pth' # action[-0.5, 0.5]
 # model_path = './models/Actor_Critics_Angle_Position_Error/ActorCritic_res21_iter28_reward737.pth' # action[-0.5, 0.5]
+# model_path = './models/REINFORCE_Angle_Position_Error_with_Control_4/con_REINFORCE_res21_iter8_reward344.pth'
 
-
-num_steps = 500
+num_steps = 600
 resolution = 21  # IMPORTANT!!! Should be same as the value in the model
 action_range = 0.5
 actions = np.linspace(-action_range, action_range, resolution)
@@ -41,10 +41,10 @@ while step_ct < num_steps:
     action_idx = DRL_model(obs).argmax().item()
     action = actions[action_idx]
     obs, reward, done, info = env.step(action)
-    if step_ct >= 200:
-        obs[2] = np.random.normal(0, 0.01)
-        obs[2] = 0
-
+    if step_ct >= 100:
+        # obs[2] = np.random.normal(0, 0.01)
+        # obs[1] = 0
+        pass
     #     obs[0] += -2
     env.render(mode = "human")
     action_record.append(action)

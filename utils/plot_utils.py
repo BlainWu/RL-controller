@@ -90,7 +90,7 @@ def plot_action(data, steps, grid=False, max_value=0.5,
         act_plot.show()
 
 
-def analyse_angle(log_path, show_fig=True, save_path=None, intersection=True):
+def analyse_angle_pole_len(log_path, show_fig=True, save_path=None, intersection=True):
     stable_margin = 0.0
     stable_angle = 12.0
     # load file
@@ -171,7 +171,144 @@ def analyse_angle(log_path, show_fig=True, save_path=None, intersection=True):
     return stable_margin
 
 
-def analyse_position(log_path, show_fig=True, save_path=None, intersection=True):
+def analyse_position_noise(log_path, show_fig=True, save_path=None, intersection=True):
+    stable_margin = 0.0
+    stable_position = 2.4
+    # load file
+    log_content = []
+    with open(log_path, 'r') as f:
+        log_content = json.load(f)
+    # iterate info
+    multi_series = []
+    max_position = []
+    for index, text in enumerate(log_content):
+        if index == 0:  # skip the info list
+            multiples = text['noise_series']
+        else:
+            multi_series.append(text['sigma'])
+            all_position = np.hsplit(np.array(text['Obs_Record']), 4)[0].squeeze()
+            max_position.append(max(np.abs(all_position)))
+    # plot figure
+    max_position_plot = plt.figure()
+    plt.plot(multi_series, max_position)
+    plt.ylim((0, 3))
+    ax = plt.gca()
+    plt.title('Maximum position at different sigma of Gaussian noise')
+    plt.xlabel('sigma')
+    plt.ylabel('maximum position')
+    plt.axhline(y=stable_position, color='red', linestyle='--')
+
+    # draw the intersections
+    if intersection:
+        _x = []
+        _y = []
+        inter_points = []
+        for index in range(len(multi_series) - 1):
+            if max_position[index] >= stable_position > max_position[index + 1] or \
+                    max_position[index] <= stable_position < max_position[index + 1]:
+                _x.append(multi_series[index])
+                _y.append(max_position[index])
+                _x.append(multi_series[index + 1])
+                _y.append(max_position[index + 1])
+                inter_points.append(np.interp(stable_position, _y, _x))
+                _x = []
+                _y = []
+
+        _margin_list = []
+        inter_points = [round(i, 2) for i in inter_points]
+        len_inter = len(inter_points)
+        if len_inter >= 1:
+            # points pre-process
+            inter_point = inter_points[0]  # pick up the first one
+            # draw points and infobox
+
+            plt.plot(inter_point, stable_position, 'ro')
+            plt.axvline(x=inter_point, color='red', linestyle=':')
+            stable_margin = inter_point
+            info_box = '\n'.join((r'$max=%.2f$' % (inter_point,),
+                                  r'$ranges=%.2f$' % (stable_margin,)))
+            props = dict(boxstyle='round', facecolor='wheat', alpha=0.5)
+            ax.text(0.02, 0.15, info_box, transform=ax.transAxes, fontsize=9,
+                    verticalalignment='top', bbox=props)
+
+    if save_path is not None:
+        plt.savefig(save_path)
+        plt.close()
+    if show_fig:
+        max_position_plot.show()
+
+    return stable_margin
+
+def analyse_angle_noise(log_path, show_fig=True, save_path=None, intersection=True):
+    stable_margin = 0.0
+    stable_angle = 12.0
+    # load file
+    log_content = []
+    with open(log_path, 'r') as f:
+        log_content = json.load(f)
+    # iterate info
+    multi_series = []
+    max_angle = []
+    for index, text in enumerate(log_content):
+        if index == 0:  # skip the info list
+            multiples = text['noise_series']
+        else:
+            multi_series.append(text['sigma'])
+            theta_all = np.hsplit(np.array(text['Obs_Record']), 4)[2].squeeze()
+            theta_all = arc_to_degree(theta_all)
+            max_angle.append(max(np.abs(theta_all)))
+    # plot figure
+    max_angle_plt = plt.figure()
+    plt.plot(multi_series, max_angle)
+    plt.ylim((0, 15))
+    ax = plt.gca()
+    plt.title('Maximum angle at different sigma of Gaussian noise')
+    plt.xlabel('sigma')
+    plt.ylabel('maximum degree')
+    plt.axhline(y=stable_angle, color='red', linestyle='--')
+
+    # draw the intersections
+    if intersection:
+        _x = []
+        _y = []
+        inter_points = []
+        for index in range(len(multi_series) - 1):
+            if max_angle[index] >= stable_angle > max_angle[index + 1] or \
+                    max_angle[index] <= stable_angle < max_angle[index + 1]:
+                _x.append(multi_series[index])
+                _y.append(max_angle[index])
+                _x.append(multi_series[index + 1])
+                _y.append(max_angle[index + 1])
+                inter_points.append(np.interp(stable_angle, _y, _x))
+                _x = []
+                _y = []
+
+        _margin_list = []
+        inter_points = [round(i, 2) for i in inter_points]
+        len_inter = len(inter_points)
+        if len_inter >= 1:
+            # points pre-process
+            inter_point = inter_points[0]  # pick up the first one
+            # draw points and infobox
+            plt.plot(inter_point, stable_angle, 'ro')
+            plt.axvline(x=inter_point, color='red', linestyle=':')
+            stable_margin = inter_point
+            info_box = '\n'.join((r'$max=%.2f$' % (inter_point,),
+                                  r'$ranges=%.2f$' % (stable_margin,)))
+            props = dict(boxstyle='round', facecolor='wheat', alpha=0.5)
+            ax.text(0.02, 0.15, info_box, transform=ax.transAxes, fontsize=9,
+                    verticalalignment='top', bbox=props)
+
+    if save_path is not None:
+        plt.savefig(save_path)
+        plt.close()
+    if show_fig:
+        max_angle_plt.show()
+
+    return stable_margin
+
+
+def analyse_position_pole_len(log_path, show_fig=True, save_path=None, intersection=True):
     stable_margin = 0.0
     stable_position = 2.4
     # load file
@@ -250,6 +387,7 @@ def analyse_position(log_path, show_fig=True, save_path=None, intersection=True)
         max_position_plot.show()
 
     return stable_margin
+
 
 
 def generate_multi_series(max_multi=20, resolution=20, precision=3):
@@ -356,10 +494,10 @@ def plot_all_models_angle_position_margin(models_path, figure_dir, max_multi=40,
                 generate_RL_multi_poles_test(model_path, imgs_dir, max_multi=max_multi, samplings=samplings, action_type=action_type)
             else:
                 pass
-            angle_margin = analyse_angle(log_path=os.path.join(imgs_dir, 'logger.json'),
-                          save_path=os.path.join(angle_analysis_dir, 'Angle_{}.png'.format(model.split('.')[0])))
-            position_margin = analyse_position(log_path=os.path.join(imgs_dir, 'logger.json'),
-                                         save_path=os.path.join(position_analysis_dir, 'Position_{}.png'.format(model.split('.')[0])))
+            angle_margin = analyse_angle_pole_len(log_path=os.path.join(imgs_dir, 'logger.json'),
+                                                  save_path=os.path.join(angle_analysis_dir, 'Angle_{}.png'.format(model.split('.')[0])))
+            position_margin = analyse_position_pole_len(log_path=os.path.join(imgs_dir, 'logger.json'),
+                                                        save_path=os.path.join(position_analysis_dir, 'Position_{}.png'.format(model.split('.')[0])))
             temp_margin['Angle_Margin'] = angle_margin
             temp_margin['Position_Margin'] = position_margin
             margin_data[model.split('.')[0]] = temp_margin

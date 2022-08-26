@@ -3,7 +3,7 @@ import os.path
 import numpy as np
 import matplotlib.pyplot as plt
 import json
-from utils.plot_utils import analyse_angle
+from utils.plot_utils import analyse_angle_pole_len
 from utils.plot_utils import generate_RL_multi_poles_test
 from utils.plot_utils import analyse_shift
 from networks.REINFORCE import PolicyNet

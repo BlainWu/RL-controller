@@ -24,7 +24,7 @@ class ContinuousCartPole_V3(gym.Env):
     }
 
     def __init__(self, mass_cart=1.0, mass_pole=0.1, length=0.5,
-                 disturb_type=None, disturb_starts=None, sensor_index=[0, 1, 2, 3], gaussian_std=0.01,
+                 disturb_type=None, disturb_starts=None, sensor_index=[0, 1, 2, 3, 4], gaussian_std=0.01,
                  random_len=None, penalise=None, random_position=None):
         """
         :param disturb_type: chose the type of disturbances, 'Gauss Noise', 'Sensor Failure'
@@ -62,7 +62,7 @@ class ContinuousCartPole_V3(gym.Env):
         assert self.disturb_type in [None, 'Gauss Noise', 'Sensor Failure'], \
             "The following types of disturbances are available: 'Gauss Noise', 'Sensor Failure'"
         for i in self.sensor_index:
-            assert i in [0, 1, 2, 3], '{} is not a valid index of sensor.'.format(i)
+            assert i in [0, 1, 2, 3, 4], '{} is not a valid index of sensor.'.format(i)
 
         # check the rewards configuration
         assert self.penalise in [None, 'Absolute Control Signal', 'Angle Error', 'Control Signal Increments',
@@ -164,7 +164,8 @@ class ContinuousCartPole_V3(gym.Env):
                 reward = 0
         elif self.penalise == 'Angle Position Error with Control Signal':
             if not done:
-                reward = 6/(6 + abs(theta*(180 / math.pi))) + 1.2/(1.2 + abs(x)) - 1.5 + 1/(1+abs(action))
+                reward = 1 * (6/(6 + abs(theta*(180 / math.pi)))-0.5) + 1.5 * (1.2/(1.2 + abs(x)) - 0.5) + \
+                         0.25*(1/(1+abs(action)) - 0.5)
             else:
                 reward = 0
         elif self.penalise == 'Integral Angle Position':
@@ -190,7 +191,10 @@ class ContinuousCartPole_V3(gym.Env):
                     temp_state[ind_sensor] *= (1 + np.random.normal(0, self.gaussian_std))
             elif self.disturb_type == 'Sensor Failure':
                 for ind_sensor in self.sensor_index:
-                    temp_state[ind_sensor] = 0.0  # no signal return
+                    if ind_sensor == 0:
+                        pass
+                    else:
+                        temp_state[ind_sensor-1] = 0.0  # no signal return
             else:
                 pass
         self.obs_state = tuple(temp_state)  # update state
@@ -199,7 +203,7 @@ class ContinuousCartPole_V3(gym.Env):
     def reset(self):
         self.state = self.np_random.uniform(low=-0.05, high=0.05, size=(4,))
         if self.random_position is not None:
-            self.state[0] = (np.random.rand() - 0.5) * 2 * self.random_position
+            self.state[0] = (np.random.randn() - 0.5) * 2 * self.random_position
         self.steps_beyond_done = None
         self.last_action = 0.0
         self.action_integral = 0.0

@@ -1,6 +1,7 @@
 import os.path
 import utils.rl_utils as rl_utils
 from envs.continuous_cartpole_v2 import ContinuousCartPole_V2
+from envs.continuous_cartpole_v3 import ContinuousCartPole_V3
 import torch
 import torch.nn.functional as F
 from tqdm import tqdm
@@ -61,8 +62,8 @@ class REINFORCE:
 
 
 if __name__ == '__main__':
-    env = ContinuousCartPole_V2(penalise='Angle Position Error')
-    models_dir = '../models/REINFORCE_Angle_Position_Error_6'  # make sure you change it !
+    env = ContinuousCartPole_V3(penalise='Angle Position Error with Control Signal', random_position=0.5)
+    models_dir = '../models/REINFORCE_Angle_Position_Error_with_Control_4'  # make sure you change it !
 
     lr = 1e-3
     check_time = 100  # how often check the model to save
@@ -80,9 +81,9 @@ if __name__ == '__main__':
     state_dim = env.observation_space.shape[0]
     action_dim = resolution
     agent = REINFORCE(state_dim, hidden_dim, action_dim, lr, gamma, device, baseline=1)
-    Resume = False
+    Resume = True
     if Resume:
-        path_checkpoint = '../models/REINFORCE_Angle_Position_Error_2/con_REINFORCE_res21_iter44_reward2007.pth'
+        path_checkpoint = '../models/REINFORCE_Angle_Position_Error_with_Control_2/con_REINFORCE_res21_iter39_reward8.pth'
         check_point = torch.load(path_checkpoint, map_location=torch.device('cuda'))
         agent.policy_net.load_state_dict(check_point.state_dict())
         agent.policy_net.train()

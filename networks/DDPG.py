@@ -102,8 +102,8 @@ class DDPG:
         self.soft_update(self.critic, self.target_critic)  # 软更新价值网络
 
 if __name__ == '__main__':
-    env = ContinuousCartPole_V3(penalise='Angle Position Error with Control Signal', random_position=1.5)
-    models_dir = '../models/DDPG_Angle_Position_Error_with_Control_rand_position_0'  # make sure you change it !
+    env = ContinuousCartPole_V3(penalise='Angle Position Error with Control Signal', random_position=0.5)
+    models_dir = '../models/DDPG_Angle_Position_Error_with_Control_rand_position_random_sensor_failure_1'  # make sure you change it !
     if not os.path.exists(models_dir):
         os.mkdir(models_dir)
     # networks parameters
@@ -152,8 +152,9 @@ if __name__ == '__main__':
     parameter_dict['hidden_dim'] = hidden_dim
     parameter_dict['gamma'] = gamma
     parameter_dict['random_position'] = random_position
-    parameter_dict['rewards'] = '6/(6 + abs(theta*(180 / math.pi))) + 1.2/(1.2 + abs(x)) - 1.5 + 1/(1+abs(action))'
-    parameter_dict['info'] = 'random position + control signal'
+    parameter_dict['rewards'] = '1 * (6/(6 + abs(theta*(180 / math.pi)))-0.5) + 1.5 * (1.2/(1.2 + abs(x)) - 0.5) + \
+                         0.25*(1/(1+abs(action)) - 0.5)'
+    parameter_dict['info'] = 'random position normal 0.5 + control signal+ sensor failure'
     log_content.append(parameter_dict)
     with open(logger_path, 'w') as file:
         json_file = json.dumps(log_content, indent=3)
@@ -164,6 +165,8 @@ if __name__ == '__main__':
     for i in range(iterations):
         with tqdm(total=check_time, desc='Iteration %d' % i) as pbar:
             for i_episode in range(check_time):
+                sensor_failure_index = i_episode % 4 # used for random sensor failure
+                sensor_failure_freq = 4
                 episode_return = 0
                 state = env.reset()
                 _step_ct = 0
@@ -172,6 +175,11 @@ if __name__ == '__main__':
                     _step_ct += 1
                     action = agent.take_action(state)
                     next_state, reward, done, info = env.step(action)
+                    # if _step_ct % sensor_failure_freq == 0:               # used for random sensor failure
+                    if sensor_failure_index in [0, 1, 2]:   # used for random sensor failure
+                        pass                        # used for random sensor failure
+                    else:                           # used for random sensor failure
+                        next_state[sensor_failure_index] = 0    # used for random sensor failure
                     replay_buffer.add(state, action, reward, next_state, done)
                     state = next_state
                     episode_return += reward
