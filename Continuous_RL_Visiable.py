@@ -12,7 +12,8 @@ import time
 # model_path = './models/DDPG_Angle_Position_Error_with_Control_3/DDPG_iter2_reward346.pth'
 # model_path = './models/DDPG_Angle_Position_Error_with_rand_position_0/DDPG_iter7_reward586.pth'
 # model_path = './models/DDPG_Angle_Position_Error_with_Control_rand_position_1/DDPG_iter1_reward429.pth'
-model_path = './models/DDPG_Angle_Position_Error_with_Control_rand_position_random_sensor_failure_1/DDPG_iter7_reward374.pth'
+# model_path = './models/DDPG_Angle_Position_Error_with_Control_rand_position_random_sensor_failure_1/DDPG_iter7_reward374.pth'
+model_path = './models/DDPG_Angle_Position_Error_with_Control_rand_position_polelen008_0/DDPG_iter2_reward304.pth'
 num_steps = 600
 
 """ Init """
@@ -38,7 +39,7 @@ while step_ct < num_steps:
     action = DRL_model(obs).item()
     obs, reward, done, info = env.step(action)
     if step_ct >= 100:
-        obs[3] = 0
+        obs[2] += np.random.normal(0, 0.05)
     #     # obs[0] += -1
     env.render(mode="human")
     action_record.append(action)

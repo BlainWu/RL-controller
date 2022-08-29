@@ -128,17 +128,17 @@ def generate_LQR_noise_test(figures_dir, info = '',num_steps=600, max_sigma=1, r
         file.write(json_f)
 
 if __name__ == "__main__":
-    figures_dir = '../experiments/LQR_Noise/angle_m05_r30'
+    figures_dir = '../experiments/LQR_PoleLen/angle_m05_r45'
     logger_path = os.path.join(figures_dir, 'logger.json')
     angle_margin_fig_path = os.path.join(os.path.dirname(figures_dir), '1_angle_{}.png'.format(figures_dir.split('/')[-1]))
     position_margin_fig_path = os.path.join(os.path.dirname(figures_dir), '2_position_{}.png'.format(figures_dir.split('/')[-1]))
 
     """multi poles"""
-    # generate_LQR_multi_poles_test(figures_dir, max_multi=20, resolution=30)
-    # angle_margin = analyse_angle(logger_path, save_path=angle_margin_fig_path)
-    # position_margin = analyse_position(logger_path,save_path=position_margin_fig_path)
+    # generate_LQR_multi_poles_test(figures_dir, max_multi=20, resolution=45)
+    # angle_margin = analyse_angle_pole_len(logger_path, save_path=angle_margin_fig_path)
+    # position_margin = analyse_position_pole_len(logger_path,save_path=position_margin_fig_path)
 
-    """multi noise"""
-    # generate_LQR_noise_test(figures_dir, max_sigma=0.5, resolution=30)
-    angle_margin = analyse_angle_noise(logger_path, save_path=angle_margin_fig_path)
-    position_margin = analyse_position_noise(logger_path, save_path=position_margin_fig_path)
+    """gaussian noise test"""
+    # generate_LQR_noise_test(figures_dir, max_sigma=0.5, resolution=40)
+    # angle_margin = analyse_angle_noise(logger_path, save_path=angle_margin_fig_path)
+    # position_margin = analyse_position_noise(logger_path, save_path=position_margin_fig_path)

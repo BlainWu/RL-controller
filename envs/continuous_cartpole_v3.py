@@ -39,7 +39,7 @@ class ContinuousCartPole_V3(gym.Env):
         self.masspole = mass_pole
         self.total_mass = (self.masspole + self.masscart)
         # actually half the pole's length
-        self.length = np.random.normal(length, random_len) if random_len is not None else length
+        self.length = length * np.random.normal(1, random_len) if random_len is not None else length
         self.polemass_length = (self.masspole * self.length)
         self.force_mag = 30.0
         self.tau = 0.02  # seconds between state updates

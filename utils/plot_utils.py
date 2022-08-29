@@ -113,6 +113,7 @@ def analyse_angle_pole_len(log_path, show_fig=True, save_path=None, intersection
     plt.axes(xscale="log")
     plt.plot(multi_series, max_angle)
     plt.ylim((0, 15))
+    plt.xlim((0.05, 50))
     ax = plt.gca()
     plt.title('Maximum angle at different pole lengths')
     plt.xlabel('multiplier')
@@ -191,6 +192,7 @@ def analyse_position_noise(log_path, show_fig=True, save_path=None, intersection
     # plot figure
     max_position_plot = plt.figure()
     plt.plot(multi_series, max_position)
+    plt.xlim((0.05, 50))
     plt.ylim((0, 3))
     ax = plt.gca()
     plt.title('Maximum position at different sigma of Gaussian noise')
@@ -411,7 +413,6 @@ def generate_RL_multi_poles_test(model_path, figures_dir, num_steps=500, max_mul
     DRL_model.to(device)
     # experiments parameters
     multi_series = generate_multi_series(max_multi=max_multi,resolution=samplings)
-    num_steps = 500
     # generate log file
     log_content = []
     # log header
@@ -468,8 +469,84 @@ def generate_RL_multi_poles_test(model_path, figures_dir, num_steps=500, max_mul
         json_f = json.dumps(log_content, indent=3)
         file.write(json_f)
 
+def generate_RL_noise_test(model_path, figures_dir, num_steps=600, max_sigma=0.5, samplings=40, action_type=""):
+    """Parameters"""
+    resolution = 21  # IMPORTANT!!! Should be same as the value in the model
+    actions = np.linspace(-0.5, 0.5, resolution)
+    # config
+    np.set_printoptions(suppress=True)
+    np.set_printoptions(precision=4)
+    device = torch.device("cuda") if torch.cuda.is_available() else torch.device('cpu')
+    DRL_model = torch.load(model_path)
+    DRL_model.eval()
+    DRL_model.to(device)
+    env = ContinuousCartPole_V1()
+    # experiments parameters
+    sigma_series = np.linspace(0, max_sigma, samplings)
+    # generate log file
+    log_content = []
+    # log header
+    info_experiment = {}
+    info_experiment['num_steps'] = num_steps
+    info_experiment['disturbances'] = 'None'
+    info_experiment['variable'] = 'sigma of noise'
+    info_experiment['noise_series'] = sigma_series.tolist()
+    log_content.append(info_experiment)
+    result_dir = os.path.join(os.getcwd(), figures_dir)
+    if not os.path.exists(result_dir):
+        try:
+            os.mkdir(result_dir)
+        except FileNotFoundError:
+            os.mkdir(os.path.dirname(result_dir))
+            os.mkdir(result_dir)
+    assert action_type in ['Discrete', 'Continuous'], "The type of test only can be 'Discrete' and 'Continuous'"
+    with open(os.path.join(result_dir, 'logger.json'), 'w') as file:
+        for index, sigma in enumerate(tqdm(sigma_series)):
+            # clear buffer
+            obs_record = []
+            action_record = []
+            info = {}
+            # init env
+            obs = env.reset()
+            obs_controller = obs.copy()
+            for step in range(num_steps):
+                # convert to tensor
+                obs_controller = torch.tensor([obs_controller], dtype=torch.float).to(device)
+                if action_type == "Discrete":
+                    action_idx = DRL_model(obs_controller).argmax().item()
+                    action = actions[action_idx]
+                    obs, reward, done, info = env.step(action)
+                    obs_controller = obs.copy()
+                    obs_controller[2] += np.random.normal(0, sigma)
+                    # record data
+                    obs_record.append(obs.tolist())
+                    action_record.append(action.tolist())
+                elif action_type == "Continuous":
+                    action = DRL_model(obs_controller).item()
+                    obs, reward, done, info = env.step(action)
+                    obs_controller = obs.copy()
+                    obs_controller[2] += np.random.normal(0, sigma)
+                    # record data
+                    obs_record.append(obs.tolist())
+                    action_record.append(action)
 
-def plot_all_models_angle_position_margin(models_path, figure_dir, max_multi=40, samplings=40, action_type=''):
+            info['sigma'] = sigma
+            info['Obs_Record'] = obs_record
+            info['Action_Record'] = action_record
+            env.close()
+            # plot data
+            plot_action(action_record, num_steps, max_value=1.2, show_fig=False,
+                        save_path=os.path.join(result_dir, 'action_p{}_sigma_{}.png'.format(index, sigma)))
+            plot_states(obs_record, num_steps, show_fig=False,
+                        save_path=os.path.join(result_dir, 'state_p{}_sigma_{}.png'.format(index, sigma)))
+            log_content.append(info)
+
+        json_f = json.dumps(log_content, indent=3)
+        file.write(json_f)
+
+
+
+def analyse_all_models_pole_len(models_path, figure_dir, max_multi=40, samplings=40, action_type=''):
     model_lists = os.listdir(models_path)
     model_lists.remove('logger.json')
     if not os.path.exists(figure_dir):
@@ -491,13 +568,56 @@ def plot_all_models_angle_position_margin(models_path, figure_dir, max_multi=40,
             imgs_dir = os.path.join(figure_dir, model.split('.')[0])
             if not os.path.exists(imgs_dir):
                 os.mkdir(imgs_dir)
-                generate_RL_multi_poles_test(model_path, imgs_dir, max_multi=max_multi, samplings=samplings, action_type=action_type)
+                generate_RL_multi_poles_test(model_path, imgs_dir, max_multi=max_multi,
+                                             samplings=samplings, action_type=action_type)
             else:
                 pass
             angle_margin = analyse_angle_pole_len(log_path=os.path.join(imgs_dir, 'logger.json'),
-                                                  save_path=os.path.join(angle_analysis_dir, 'Angle_{}.png'.format(model.split('.')[0])))
+                                                  save_path=os.path.join(angle_analysis_dir,
+                                                                         'Angle_{}.png'.format(model.split('.')[0])))
             position_margin = analyse_position_pole_len(log_path=os.path.join(imgs_dir, 'logger.json'),
-                                                        save_path=os.path.join(position_analysis_dir, 'Position_{}.png'.format(model.split('.')[0])))
+                                                        save_path=os.path.join(position_analysis_dir,
+                                                                               'Position_{}.png'.format(model.split('.')[0])))
+            temp_margin['Angle_Margin'] = angle_margin
+            temp_margin['Position_Margin'] = position_margin
+            margin_data[model.split('.')[0]] = temp_margin
+        logger_content.append(margin_data)
+        json_f = json.dumps(logger_content, indent=3)
+        file.write(json_f)
+
+def analyse_all_models_noise(models_path, figure_dir, max_sigma=0.5, samplings=40, action_type=''):
+    assert os.path.exists(models_path), 'Please check the dirname of the models'
+    model_lists = os.listdir(models_path)
+    model_lists.remove('logger.json')
+    if not os.path.exists(figure_dir):
+        os.mkdir(figure_dir)
+    logger_content = []
+    margin_data = {}
+    # mkdir
+    angle_analysis_dir = os.path.join(figure_dir,'1_angle_analysis')
+    position_analysis_dir = os.path.join(figure_dir, '2_position_analysis')
+    if not os.path.exists(angle_analysis_dir):
+        os.mkdir(angle_analysis_dir)
+    if not os.path.exists(position_analysis_dir):
+        os.mkdir(position_analysis_dir)
+
+    with open(os.path.join(figure_dir, 'angle_position_record.json'), 'a') as file:
+        for model in tqdm(model_lists):
+            temp_margin = {}
+            model_path = os.path.join(models_path, model)
+            imgs_dir = os.path.join(figure_dir, model.split('.')[0])
+            if not os.path.exists(imgs_dir):
+                os.mkdir(imgs_dir)
+                generate_RL_noise_test(model_path, imgs_dir, max_sigma=max_sigma,
+                                       samplings=samplings, action_type=action_type)
+            else:
+                pass
+            angle_margin = analyse_angle_noise(log_path=os.path.join(imgs_dir, 'logger.json'),
+                                                  save_path=os.path.join(angle_analysis_dir,
+                                                                         'Angle_{}.png'.format(model.split('.')[0])))
+            position_margin = analyse_position_noise(log_path=os.path.join(imgs_dir, 'logger.json'),
+                                                        save_path=os.path.join(position_analysis_dir,
+                                                                               'Position_{}.png'.format(model.split('.')[0])))
             temp_margin['Angle_Margin'] = angle_margin
             temp_margin['Position_Margin'] = position_margin
             margin_data[model.split('.')[0]] = temp_margin
