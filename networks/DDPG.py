@@ -102,8 +102,9 @@ class DDPG:
         self.soft_update(self.critic, self.target_critic)  # 软更新价值网络
 
 if __name__ == '__main__':
-    env = ContinuousCartPole_V3(penalise='Angle Position Error with Control Signal', random_position=0.5, random_len=0.08)
-    models_dir = '../models/DDPG_Angle_Position_Error_with_Control_rand_position_polelen01_0'  # make sure you change it !
+    env = ContinuousCartPole_V3(penalise='Angle Position Error with Control Signal', random_position=0.1, random_len=0.1,
+                                disturb_starts=1, gaussian_std=0.05, disturb_type='Gauss Noise', sensor_index=[3])
+    models_dir = '../models/DDPG_Angle_Position_Error_Atlas'  # make sure you change it !
     if not os.path.exists(models_dir):
         os.mkdir(models_dir)
     # networks parameters

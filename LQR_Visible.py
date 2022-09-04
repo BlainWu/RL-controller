@@ -48,17 +48,17 @@ if __name__ == "__main__":
     obs = env.reset()
     num_steps = 600
     # init controller
-    K = generate_K_from_ARE()
+    K = generate_K_from_ARE()  # [[ -3.16227766  -4.83052309 -61.84233823 -12.09840925]]
     # record data
     action_record = []
     obs_record = []
     for step in range(num_steps):
-        control_obs = obs
+        control_obs = obs.copy()
         if step >=100:
             # control_obs[2] += np.random.normal(0, 0.2)
             # control_obs[0] += -2
-            control_obs[3] = 0
-        action = optimal_controller(K, control_obs)
+            obs[0] -= 1
+        action = optimal_controller(K, obs)
         obs, reward, done, info = env.step(action)
         # record data
         obs_record.append(control_obs)

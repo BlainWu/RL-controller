@@ -203,7 +203,8 @@ class ContinuousCartPole_V3(gym.Env):
     def reset(self):
         self.state = self.np_random.uniform(low=-0.05, high=0.05, size=(4,))
         if self.random_position is not None:
-            self.state[0] = (np.random.randn() - 0.5) * 2 * self.random_position
+            # self.state[0] = (np.random.randn() - 0.5) * 2 * self.random_position
+            self.state[0] = np.random.choice((-1, 1)) * np.random.normal(1.0, self.random_position)
         self.steps_beyond_done = None
         self.last_action = 0.0
         self.action_integral = 0.0

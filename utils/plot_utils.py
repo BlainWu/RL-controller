@@ -390,8 +390,6 @@ def analyse_position_pole_len(log_path, show_fig=True, save_path=None, intersect
 
     return stable_margin
 
-
-
 def generate_multi_series(max_multi=20, resolution=20, precision=3):
     temp_a = np.linspace(1, max_multi, resolution).tolist()
     temp_b = np.linspace(1 / 15, 1, 25).tolist()
