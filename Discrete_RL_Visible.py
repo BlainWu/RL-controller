@@ -5,14 +5,22 @@ from networks.REINFORCE import PolicyNet
 from utils.plot_utils import plot_action,plot_states
 import time
 
-"""Parameters"""
+"""Position Set-point"""
+set_point_start = 200
+set_point_position = 1
+
+
+"""Load Models"""
 # model_path = './models/REINFORCE_Angle_Position_Error_1/con_REINFORCE_res21_iter24_reward4080.pth'
 # model_path = './models/REINFORCE_Integral_All_0/con_REINFORCE_res21_iter12_reward304.pth'
 # model_path = './models/REINFORCE_Integral_All_1/con_REINFORCE_res21_iter17_reward470.pth' # action[-0.5, 0.5]
 # model_path = './models/REINFORCE_Angle_Position_Error_5/con_REINFORCE_res21_iter37_reward364.pth' # action[-0.5, 0.5]
 # model_path = './models/Actor_Critics_Angle_Position_Error/ActorCritic_res21_iter28_reward737.pth' # action[-0.5, 0.5]
 # model_path = './models/REINFORCE_Angle_Position_Error_with_Control_4/con_REINFORCE_res21_iter8_reward344.pth'
-model_path = './models/REINFORCE_Angle_Position_Error_2/con_REINFORCE_res21_iter37_reward2111.pth'
+# model_path = './models/REINFORCE_Angle_Position_Error_2/REINFORCE_demo.pth'
+model_path = './demo_models/REINFORCE_demo.pth'
+
+
 num_steps = 600
 resolution = 21  # IMPORTANT!!! Should be same as the value in the model
 action_range = 0.5
@@ -42,11 +50,8 @@ while step_ct < num_steps:
     action = actions[action_idx]
     obs, reward, done, info = env.step(action)
     obs_controller = obs.copy()
-    if step_ct >= 100:
-        # obs[2] = np.random.normal(0, 0.01)
-        # obs[1] = 0
-        pass
-        obs[0] -= 1
+    if step_ct >= set_point_start:
+        obs[0] -= set_point_position
     env.render(mode = "human")
     action_record.append(action)
     obs_record.append(obs_controller)

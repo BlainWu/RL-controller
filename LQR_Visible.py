@@ -41,6 +41,10 @@ def optimal_controller(K, state):
 
 
 if __name__ == "__main__":
+    """    --------Position Set-point------------    """
+    set_point_start = 200
+    set_point_position = 1
+
     # init env
     # env = ContinuousCartPoleEnv(disturb_type='Gauss Noise', sensor_index=[0, 1, 2, 3],
     #                             disturb_starts=100, gaussian_std=0.3)
@@ -54,10 +58,8 @@ if __name__ == "__main__":
     obs_record = []
     for step in range(num_steps):
         control_obs = obs.copy()
-        if step >=100:
-            # control_obs[2] += np.random.normal(0, 0.2)
-            # control_obs[0] += -2
-            obs[0] -= 1
+        if step >= set_point_start:
+            obs[0] -= set_point_position
         action = optimal_controller(K, obs)
         obs, reward, done, info = env.step(action)
         # record data
@@ -70,4 +72,3 @@ if __name__ == "__main__":
     # plot data
     plot_action(action_record, num_steps, max_value=1.2,show_fig=True)
     plot_states(obs_record, num_steps,show_fig=True)
-

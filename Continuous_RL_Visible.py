@@ -6,7 +6,7 @@ from networks.DDPG import ActorNet as PolicyNet
 from utils.plot_utils import plot_action,plot_states
 import time
 
-"""Parameters"""
+"""Load Models"""
 # model_path = './models/DDPG_Angle_Position_Error_1/DDPG_iter1_reward439.pth' # response
 # model_path = './models/DDPG_Angle_Position_Error/DDPG_iter13_reward769.pth'
 # model_path = './models/DDPG_Angle_Position_Error_with_Control_3/DDPG_iter2_reward346.pth'
@@ -16,6 +16,12 @@ import time
 # model_path = './models/DDPG_Angle_Position_Error_with_Control_rand_position_polelen008_0/DDPG_iter2_reward304.pth'
 # model_path = './models/DDPG_Angle_Position_Error_with_Control_step_position/DDPG_iter1_reward533.pth' # step response
 # model_path = './models/DDPG_Angle_Position_Error_Atlas/DDPG_iter4_reward476.pth'
+model_path = './demo_models/DDPG_demo.pth'
+
+"""Position Set-point"""
+set_point_start = 200
+set_point_position = 1
+
 num_steps = 600
 
 """ Init """
@@ -41,9 +47,9 @@ while step_ct < num_steps:
     action = DRL_model(obs).item()
     obs, reward, done, info = env.step(action)
     obs_real = obs.copy()
-    # if step_ct >= 100:
+    if step_ct >= 100:
         # obs[2] += np.random.normal(0, 0.05) # random noise
-        # obs[0] += -1                        # mis-place
+        obs[0] += -1                        # mis-place
     env.render(mode="human")
     action_record.append(action)
     obs_record.append(obs_real)
